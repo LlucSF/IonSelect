@@ -1,0 +1,15 @@
+Package: IonSelect
+Type: Package
+Title: Ions selection tool for MSI datasaets
+Version: 0.1.0
+Author: Esteban del Castillo & Lluc Sementé
+Maintainer: Esteban del Castillo <esteban.delcastillo@urv.cat>
+Description: This tool compares ion expressions between clusters (A vs B) and select those that are up/down-regulated at each level.
+    In order to run this this code, you will need the GSL library.
+License: GPL
+Encoding: UTF-8
+LazyData: true
+Imports: Rcpp (>= 0.12.15),
+        RcppGSL
+LinkingTo: Rcpp, RcppGSL
+RoxygenNote: 6.0.1
