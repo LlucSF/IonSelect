@@ -94,12 +94,12 @@
       {
         for (k in 1:dim(Test[[h]][[i]])[2])
         {
-          if (Test[[h]][[i]][j,k]==4)
+          if ((Test[[h]][[i]][j,k] == 3)||(Test[[h]][[i]][j,k] == 4)) 
           {
             Test[[h]][[i]][j,k] <- "DownRegulated"
           }
           
-          if (Test[[h]][[i]][j,k]==2)
+          if ((Test[[h]][[i]][j,k] == 1)||(Test[[h]][[i]][j,k] == 2)) 
           {
             Test[[h]][[i]][j,k] <- "UpRegulated"
           }
