@@ -16,9 +16,6 @@
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **************************************************************************/
 
-// In order to run this on Windows you need the GNU GSL library avaliable in the link below for the x64bits systems (03/2018)
-// GSL win64 -> http://joonro.github.io/blog/posts/installing-gsl-and-cythongsl-in-windows.html#
-
 #include <Rcpp.h>
 #include <RcppGSL.h>
 #include "types.h"
@@ -27,7 +24,7 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 
-List IonsSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int numCols,
+List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int numCols,
                 NumericVector massAxis, int numSamples, int nPTestGroups,
                 NumericVector R_pTestGroups, NumericVector ClustersSize,
                 List ClustersPixels, NumericMatrix data)

@@ -16,20 +16,20 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-#' TestIonsSelect.
+#' TestIonSelect
 #'
 #' @description Performs a test that calculates and select the up-regulated and/or down-regulated
 #' ions from a peak matrix between defernt clusters.
 #'
-#' @param PeakMtx A matrix of peaks containg mass spectra data
+#' @param PeakMtx A matrix of peaks containing mass spectra data
 #' @param Probability Probability restriction of the test.
-#' @param Segmentation_matrix A matrix containing a segmentated peak matrix.
-#' @param SgmtsChoose A vector containing which clusters should be analaized.
-#' @return List containing 3 elements. The results from the Volcano test, the results from the Zero test and the values of p, FC & Zero scores. 
+#' @param SegmentedMtx A matrix containing a segmentated peak matrix.
+#' @param SgmtsChoose A vector containing which clusters should be analyzed.
+#' @return List containing three elements. The results from the Volcano test, the results from the Zero test and the values of p, FC & Zero scores. 
 #' @export
 #'
 
-  TestIonsSelect <- function (PeakMtx, Probability, SegmentedMtx, SgmtsChoose)
+  TestIonSelect <- function (PeakMtx, Probability, SegmentedMtx, SgmtsChoose)
   {
     for(i in 1:length(SgmtsChoose))
     {
@@ -60,10 +60,10 @@
     }
   }
 
-  Test <- IonsSelectC(m_focalProb = Probability, numPixels = numPixels, SP_Pixels = PeakMtx$numPixels,
-                      numCols = length(PeakMtx$mass), massAxis = PeakMtx$mass, numSamples = samples,
-                      nPTestGroups = length(SgmtsChoose), R_pTestGroups = SgmtsChoose,
-                      ClustersSize = SegmentedMtx$size, ClustersPixels = ClustrIds, data = PeakMtx$intensity)
+  Test <- IonSelectC(m_focalProb = Probability, numPixels = numPixels, SP_Pixels = PeakMtx$numPixels,
+                     numCols = length(PeakMtx$mass), massAxis = PeakMtx$mass, numSamples = samples,
+                     nPTestGroups = length(SgmtsChoose), R_pTestGroups = SgmtsChoose,
+                     ClustersSize = SegmentedMtx$size, ClustersPixels = ClustrIds, data = PeakMtx$intensity)
 
   d <- NULL
   cnt <- 0
@@ -85,8 +85,35 @@
   Test[[1]] = Test[[1]][-d]
   Test[[2]] = Test[[2]][-d]
   Test[[3]] = IonsData
+  
+  for (h in 1:2)
+  {
+    for (i in 1:length(Test[[h]]))
+    {
+      for (j in 1:length(PeakMtx$mass))
+      {
+        for (k in 1:dim(Test[[h]][[i]])[2])
+        {
+          if (Test[[h]][[i]][j,k]==4)
+          {
+            Test[[h]][[i]][j,k] <- "DownRegulated"
+          }
+          
+          if (Test[[h]][[i]][j,k]==2)
+          {
+            Test[[h]][[i]][j,k] <- "UpRegulated"
+          }
+          
+          if (Test[[h]][[i]][j,k]==0)
+          {
+            Test[[h]][[i]][j,k] <- "--"
+          }
+        }
+      }
+    }
+  }
 
   return(Test)
   }
 
-
+  

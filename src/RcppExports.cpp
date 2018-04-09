@@ -6,9 +6,9 @@
 
 using namespace Rcpp;
 
-// IonsSelectC
-List IonsSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int numCols, NumericVector massAxis, int numSamples, int nPTestGroups, NumericVector R_pTestGroups, NumericVector ClustersSize, List ClustersPixels, NumericMatrix data);
-RcppExport SEXP _IonsSelect_IonsSelectC(SEXP m_focalProbSEXP, SEXP numPixelsSEXP, SEXP SP_PixelsSEXP, SEXP numColsSEXP, SEXP massAxisSEXP, SEXP numSamplesSEXP, SEXP nPTestGroupsSEXP, SEXP R_pTestGroupsSEXP, SEXP ClustersSizeSEXP, SEXP ClustersPixelsSEXP, SEXP dataSEXP) {
+// IonSelectC
+List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int numCols, NumericVector massAxis, int numSamples, int nPTestGroups, NumericVector R_pTestGroups, NumericVector ClustersSize, List ClustersPixels, NumericMatrix data);
+RcppExport SEXP _IonSelect_IonSelectC(SEXP m_focalProbSEXP, SEXP numPixelsSEXP, SEXP SP_PixelsSEXP, SEXP numColsSEXP, SEXP massAxisSEXP, SEXP numSamplesSEXP, SEXP nPTestGroupsSEXP, SEXP R_pTestGroupsSEXP, SEXP ClustersSizeSEXP, SEXP ClustersPixelsSEXP, SEXP dataSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -23,17 +23,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type ClustersSize(ClustersSizeSEXP);
     Rcpp::traits::input_parameter< List >::type ClustersPixels(ClustersPixelsSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type data(dataSEXP);
-    rcpp_result_gen = Rcpp::wrap(IonsSelectC(m_focalProb, numPixels, SP_Pixels, numCols, massAxis, numSamples, nPTestGroups, R_pTestGroups, ClustersSize, ClustersPixels, data));
+    rcpp_result_gen = Rcpp::wrap(IonSelectC(m_focalProb, numPixels, SP_Pixels, numCols, massAxis, numSamples, nPTestGroups, R_pTestGroups, ClustersSize, ClustersPixels, data));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_IonsSelect_IonsSelectC", (DL_FUNC) &_IonsSelect_IonsSelectC, 11},
+    {"_IonSelect_IonSelectC", (DL_FUNC) &_IonSelect_IonSelectC, 11},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_IonsSelect(DllInfo *dll) {
+RcppExport void R_init_IonSelect(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }
