@@ -12,4 +12,4 @@ LazyData: true
 Imports: Rcpp (>= 0.12.15),
         RcppGSL
 LinkingTo: Rcpp, RcppGSL
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1

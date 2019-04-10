@@ -14,21 +14,30 @@ IonsTreat::IonsTreat(int matrixRows, int matrixCols, float**matrixIn)
   m_matrixIn=matrixIn;
   m_pMatrix=NULL;
   m_fcMatrix=NULL;
+  m_threshold=EPSILON_D;
 }
 
-IonsTreat::IonsTreat()
+IonsTreat::IonsTreat(double threshold)
 {
   m_matrixRows=0;
   m_matrixCols=0;
   m_matrixIn=NULL;
   m_pMatrix=NULL;
   m_fcMatrix=NULL;
+  /*
+  if(threshold<=0.0)   
+    m_threshold=EPSILON_D;
+  else
+  */
+    //permite que no actue la gestión de zeros si threshold es negativo
+    m_threshold=threshold;
 }
 
 
 
 IonsTreat::~IonsTreat()
 {
+//  printf("IonTreat destructor input\n");
   if(m_pMatrix)
     {
     for(int row=0; row<m_matrixRows; row++)
@@ -44,6 +53,7 @@ IonsTreat::~IonsTreat()
       delete []m_fcMatrix[row];
     delete []m_fcMatrix;
     }  
+//  printf("IonTreat destructor output\n");
 }
 
 float** IonsTreat::getPMatrix()
@@ -101,6 +111,32 @@ float** IonsTreat::getPMatrix()
  return m_pMatrix;
 }
 
+double IonsTreat::getNormalP(double *dataA, double* dataB, int sizeA, int sizeB)
+{
+ double meanA, meanB, varA, varB, A, B, P;
+  if(sizeA<=1 || sizeB<=1)
+    return -1;
+ 
+  meanA = gsl_stats_mean(dataA, 1, sizeA);
+  meanB = gsl_stats_mean(dataB, 1, sizeB);
+  varA = gsl_stats_variance(dataA, 1, sizeA);    
+  varB = gsl_stats_variance(dataB, 1, sizeB);    
+ 
+  A=varA/sizeA;
+  B=varB/sizeB;
+  
+  double z;
+  if(A+B<EPSILON_LD) A=EPSILON_LD;
+  z=(meanA-meanB)/sqrt(A+B);  
+  
+  if(z>0)
+    P=2*gsl_cdf_ugaussian_Q (z);	//p
+  else
+    P=2*gsl_cdf_ugaussian_P (z);	//p
+  return (float)P;
+}
+
+
 double IonsTreat::getStudentP(float *dataA_f, float* dataB_f, int sizeA, int sizeB)
 {
   double meanA, meanB, varA, varB, stdDevA, stdB, P, A, B, C, D, t, dof;
@@ -125,13 +161,21 @@ double IonsTreat::getStudentP(float *dataA_f, float* dataB_f, int sizeA, int siz
   C=(A*A)/(sizeA-1);
   D=(B*B)/(sizeB-1);
   
-  //Welch test
-  t=(meanA-meanB)/sqrt(A+B); 	//t-test
-  dof=((A+B)*(A+B))/(C+D);	//grados de libertad
-  if(t>0)
-    P=2*gsl_cdf_tdist_Q (t, dof);	//p
+   //Welch test
+  if(A+B<EPSILON_D) 
+    t=(meanA-meanB)/sqrt(EPSILON_LD); 	//t-test
   else
-    P=2*gsl_cdf_tdist_P (t, dof);	//p
+    t=(meanA-meanB)/sqrt(A+B); 	//t-test
+    
+  if(C+D<EPSILON_D)
+    dof=((A+B)*(A+B))/EPSILON_LD;	//grados de libertad
+  else
+    dof=((A+B)*(A+B))/(C+D);	//grados de libertad
+    
+  if(t>0)
+    P=2.0*gsl_cdf_tdist_Q(t, dof);	//p
+  else
+    P=2.0*gsl_cdf_tdist_P(t, dof);	//p
   return (float)P;
   
 }
@@ -152,16 +196,22 @@ double IonsTreat::getStudentP(double *dataA, double* dataB, int sizeA, int sizeB
   B=varB/sizeB;
   C=(A*A)/(sizeA-1);
   D=(B*B)/(sizeB-1);
-  if(A+B<EPSILON_D || C+D<EPSILON_D)
-    return 0;
-  //Welch test
-  t=(meanA-meanB)/sqrt(A+B); 	//t-test
   
-  dof=((A+B)*(A+B))/(C+D);	//grados de libertad
-  if(t>0)
-    P=2*gsl_cdf_tdist_Q (t, dof);	//p
+  //Welch test
+  if(A+B<EPSILON_D) 
+    t=(meanA-meanB)/sqrt(EPSILON_LD); 	//t-test
   else
-    P=2*gsl_cdf_tdist_P (t, dof);	//p
+    t=(meanA-meanB)/sqrt(A+B); 	//t-test
+    
+  if(C+D<EPSILON_D)
+    dof=((A+B)*(A+B))/EPSILON_LD;	//grados de libertad
+  else
+    dof=((A+B)*(A+B))/(C+D);	//grados de libertad
+  
+  if(t>0)
+    P=2.0*gsl_cdf_tdist_Q(t, dof);	//p
+  else
+    P=2.0*gsl_cdf_tdist_P(t, dof);	//p
   return (float)P;
   
 // return (float)t; 
@@ -227,13 +277,13 @@ double IonsTreat::getFoldChange(float *dataA_f, float* dataB_f, int sizeA, int s
 
   for(iA=0; iA<sizeA; iA++)
     {
-    if(fabs(dataA_f[iA])<EPSILON_D) continue;//se eliminan ceros
+    if(fabs(dataA_f[iA])<=m_threshold) continue;//se eliminan ceros
     dataA2[sizeA2++]=(double)dataA_f[iA];
     }
     
   for(iB=0; iB<sizeB; iB++)
     {
-    if(fabs(dataB_f[iB])<EPSILON_D) continue;//se eliminan ceros
+    if(fabs(dataB_f[iB])<=m_threshold) continue;//se eliminan ceros
     dataB2[sizeB2++]=(double)dataB_f[iB];
     }
     
@@ -283,13 +333,13 @@ double IonsTreat::getFoldChange(double *dataA, double* dataB, int sizeA, int siz
   
   for(iA=0; iA<sizeA; iA++)
     {
-    if(fabs(dataA[iA])<EPSILON_LD) continue;//se eliminan ceros
+    if(fabs(dataA[iA])<=m_threshold) continue;//se eliminan ceros
     dataA2[sizeA2++]=dataA[iA];
     }
     
   for(iB=0; iB<sizeB; iB++)
     {
-    if(fabs(dataB[iB])<EPSILON_LD) continue;//se eliminan ceros
+    if(fabs(dataB[iB])<=m_threshold) continue;//se eliminan ceros
     dataB2[sizeB2++]=dataB[iB];
     }
     
@@ -371,10 +421,10 @@ double C=0;
 //Test U de Mann-Whitney
 //Recibe dos array con muestras y determina si esas muestras provienen de la misma distribución 
 //Retorna valores entre 0 y 1: 1 si la distribución original es la misma para ambos arrays muestras
-//Retorna valor negatrivo si el resultado no se deriva de datos consistentes
+//Retorna valor negativo si el resultado no se deriva de datos consistentes
 //'sigma' determina la desviación estándar a utilizar
 //en 'zeroRate' se retorna el cociente entre los zeros de ambos arrays. Limitado entre 0.1 y 9.999.
-//'zeroRate' vale negatrivo si el cociente no se deriva de datos consistentes
+//'zeroRate' vale negativo si el cociente no se deriva de datos consistentes
 double IonsTreat::getMannWhitneyUTest(double *dataA, double* dataB, int sizeA, int sizeB, double *zeroRate, double sigma)
 {  
   bool indexZeroA[sizeA], indexZeroB[sizeB];
@@ -404,8 +454,10 @@ double IonsTreat::getMannWhitneyUTest(double *dataA, double* dataB, int sizeA, i
     {
     if(sizeA==0) sizeA=EPSILON_LD;
     if(sizeB==0) sizeB=EPSILON_LD;
-    rateA=(double)countA_0/sizeA;
-    rateB=(double)countB_0/sizeB;
+//    rateA=(double)countA_0/sizeA; //se consideran valores nulos
+//    rateB=(double)countB_0/sizeB;
+    rateA=1.0-(double)countA_1/sizeA; //se consideran valores no nulos
+    rateB=1.0-(double)countB_1/sizeB;
     if(rateA<0.1 && rateB<0.1)
       signo=-1.0;
     if(rateB<EPSILON_LD)
@@ -424,10 +476,15 @@ double IonsTreat::getMannWhitneyUTest(double *dataA, double* dataB, int sizeA, i
     
   //Se determina la probabilidad de que se dé ese valor de Z según la sigma pasada
     if(z1<=0) 
-      p1=2*gsl_cdf_gaussian_P(z1, sigma); 
+      p1=2.0*gsl_cdf_gaussian_P(z1, sigma); 
     else 
-      p1=2*gsl_cdf_gaussian_Q(z1, sigma); 
-
+      p1=2.0*gsl_cdf_gaussian_Q(z1, sigma); 
+    
+  //Para determinar los niveles de corte, se excluyen los valores nulos (valor=0.0)
+  //Posteriormente, esos valores sí se concideran en la selección
+  //se observa que los valores de corte están más equilibrados (Z, FC y P) si se dejan como cero las p que sean cero
+//    if(p1==0) p1=1e-300; 
+    
   return (p1*signo);
 } 
   
@@ -487,23 +544,23 @@ double IonsTreat::getMannWhitneyZ(double *dataA, double* dataB, int sizeA, int s
   for(int i=0; i<sizeA+sizeB; i++)
     {
       if(i<sizeA+sizeB-1 && array[i]==array[i+1])
-	{
-	if(input==true) iB++; //si dentro de ligaduras (elementos redundantes)
-	else {iA=i; iB=i+1; input=true; acu=0;} //inicio de ligadura
-	}
+        {
+        if(input==true) iB++; //si dentro de ligaduras (elementos redundantes)
+        else {iA=i; iB=i+1; input=true; acu=0;} //inicio de ligadura
+        }
       else if(input==true) //fin de ligadura: se establecen sus rangos (valor promediado)
-	{
-	input=false;
-	nLinks=iB-iA+1;
-	acuLinks+=nLinks*(nLinks*nLinks-1); //para determinar la varianza
-	
-	for(int j=iA; j<=iB; j++)
-	  acu+=j+1; //se suman los rangos (el primero es '1' de ahí '+1')
-	for(int j=iA; j<=iB; j++)
-	  array[j]=acu/(1.0+iB-iA); //se establecen los nuevos rangos promedio
-	}
+        {
+        input=false;
+        nLinks=iB-iA+1;
+        acuLinks+=nLinks*(nLinks*nLinks-1); //para determinar la varianza
+        
+        for(int j=iA; j<=iB; j++)
+        acu+=j+1; //se suman los rangos (el primero es '1' de ahí '+1')
+        for(int j=iA; j<=iB; j++)
+        array[j]=acu/(1.0+iB-iA); //se establecen los nuevos rangos promedio
+        }
       else
-	  array[i]=i+1; //rango corregido (el primero es '1' de ahí '+1')
+        array[i]=i+1; //rango corregido (el primero es '1' de ahí '+1')
 	  
     }
      
@@ -516,16 +573,19 @@ double IonsTreat::getMannWhitneyZ(double *dataA, double* dataB, int sizeA, int s
   Ua=acuRankA-(sizeA*(sizeA+1)/2.0);
   Ub=acuRankB-(sizeB*(sizeB+1)/2.0);
     double A=sizeA+sizeB;
-    double stdDev=sqrt((sizeA*sizeB/12)*(A+1-acuLinks/(A*(A-1))));
+    double stdDev=sqrt(((sizeA*sizeB)/12.0)*(A+1-acuLinks/(A*(A-1))));
     if(stdDev<EPSILON_D) stdDev=EPSILON_D;
     
-    //Se relativiza para que z=0 si Ua=media y z=1 si Ua se desvia 1 stdDev
+    //Normalización del estadístico
+    //Se relativiza para que z=0 si Ua==media y z=1 si Ua se desvia 1 stdDev
     //ello permite aplicar la gausiana de media cero y stdDev=1
     double z=(Ua-(sizeA*sizeB)/2.0)/(stdDev);
+//    double z1=(Ub-(sizeA*sizeB)/2.0)/(stdDev);
+//    printf("sizeA:%3d sizeB:%3d Ua:%7.3f Ub:%7.3f stdDev:%7.3f, acuLinks:%7.3f z%7.3f, z1:%7.3f\n", sizeA, sizeB, Ua, Ub, stdDev, acuLinks, z, z1);
   return z;
 }
 
-//Retorna la cantiad de elementos con valor nulo en data
+//Retorna la cantidad de elementos con valor nulo en data
 //Si zerosIndex!=NULL, establece los índices de los elementos nulos en data
 int IonsTreat::getZeros(double *data, int size, int *zerosIndex)
 {
@@ -536,7 +596,7 @@ int k=0;
       {
 //printf("%e\n", fabs(data[i]));  
 	
-      if(fabs(data[i])<EPSILON_LD)
+      if(fabs(data[i])<=m_threshold)
 	zerosIndex[k++]=i;
       }
     }
@@ -544,7 +604,7 @@ int k=0;
     {
     for(int i=0; i<size; i++)
       {
-      if(fabs(data[i])<EPSILON_LD)
+      if(fabs(data[i])<=m_threshold)
 	k++;
 //printf("%e\n", fabs(data[i]));  
       }
@@ -552,7 +612,7 @@ int k=0;
   return k;
 }
 
-//Retorna la cantiad de elementos con valor no nulo en data
+//Retorna la cantidad de elementos con valor no nulo en data
 //Si notZeros!=NULL, copia los elementos no nulos de data
 int IonsTreat::getNotZeros(double *data, int size, double *notZeros)
 {
@@ -560,13 +620,13 @@ int k=0;
   if(notZeros)
     {
     for(int i=0; i<size; i++)
-      if(fabs(data[i])>EPSILON_LD)
+      if(fabs(data[i])>m_threshold)
 	notZeros[k++]=data[i];
     }
   else
     {
     for(int i=0; i<size; i++)
-      if(fabs(data[i])>EPSILON_LD)
+      if(fabs(data[i])>m_threshold)
 	k++;
     }
   return k;
