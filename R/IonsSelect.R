@@ -21,99 +21,255 @@
 #' @description Performs a test that calculates and select the up-regulated and/or down-regulated
 #' ions from a peak matrix between defernt clusters.
 #'
-#' @param PeakMtx A matrix of peaks containing mass spectra data
-#' @param Probability Probability restriction of the test.
-#' @param SegmentedMtx A matrix containing a segmentated peak matrix.
-#' @param SgmtsChoose A vector containing which clusters should be analyzed.
+#' @param PeakMtx An rMSIprocPeakMatrix object. 
+#' @param clusters Numeric Vector. A vector containing the cluster index for each pixel coded in numbers from 1 to number of clusters.
+#' @param clusterSubset Numeric vector containing the index of the clusters which will be avaluated.
+#' @param probability Double. Probability restriction of the test. More information on the paper.
 #' @return List containing three elements. The results from the Volcano test, the results from the Zero test and the values of p, FC & Zero scores. 
 #' @export
 #'
 
-  TestIonSelect <- function (PeakMtx, Probability, SegmentedMtx, SgmtsChoose)
-  {
-    for(i in 1:length(SgmtsChoose))
-    {
-      if (SgmtsChoose[i]>=length(SgmtsChoose))
-      {
-      return( writeLines("Wrong Cluster Indexes"))
-      }
-    }
+TestIonSelect <- function(PeakMtx, clusters, clusterSubset = unique(clusters), probability = 0.05)
+{
 
-  numPixels <- 0
-  for (samples in 1:length(PeakMtx$numPixels))
+  
+  ### Imput check and format ###
+  clusterSubset <- sort(clusterSubset)
+  name_clusters <- unique(clusters)
+  
+  for(i in 1:length(clusterSubset))
   {
-    numPixels <- numPixels + PeakMtx$numPixels[samples]
-  }
-
-  ClustrIds <- list()
-  for (j in 1:length(SegmentedMtx$size))
-  {
-    cnt <- 0
-    ClustrIds[[j]] <- 0
-    for (Id in 1:numPixels)
+    if(clusterSubset[i] > length(name_clusters) | (clusterSubset[i] == 0))
     {
-      if (SegmentedMtx$cluster[Id] == j)
-      {
-        cnt <- cnt+1
-        ClustrIds[[j]][cnt] <- Id-1
-      }
+    return( writeLines("Wrong cluster indexes. Indexes must be between 1 and number of clusters Ex: c(1,3,4) to select clusters 1,3 and 4 from a clustering with 4 centers"))
     }
   }
 
-  Test <- IonSelectC(m_focalProb = Probability, numPixels = numPixels, SP_Pixels = PeakMtx$numPixels,
-                     numCols = length(PeakMtx$mass), massAxis = PeakMtx$mass, numSamples = samples,
-                     nPTestGroups = length(SgmtsChoose), R_pTestGroups = SgmtsChoose,
-                     ClustersSize = SegmentedMtx$size, ClustersPixels = ClustrIds, data = PeakMtx$intensity)
-
-  d <- NULL
-  cnt <- 0
-  IonsData <- list()
-  for(j in 1:(2^length(SgmtsChoose)))
+  size_clusters <- c()
+  for(i in clusterSubset)
+  {
+    size_clusters <- c(size_clusters, length(which(clusters == i)))
+  }
+  
+  ID_clusters <- list()
+  for(i in 1:length(clusterSubset))
+  {
+    ID_clusters[[i]] <- which(clusters == clusterSubset[i])-1
+  }
+  
+  
+  
+  ### C call ###
+  Test <- IonSelectC(   m_focalProb = probability, 
+                          numPixels = sum(PeakMtx$numPixels), 
+                          SP_Pixels = PeakMtx$numPixels, 
+                            numCols = length(PeakMtx$mass),
+                           massAxis = PeakMtx$mass, 
+                         numSamples = nrow(PeakMtx$intensity),
+                       nPTestGroups = length(clusterSubset), 
+                      R_pTestGroups = clusterSubset-1,
+                       ClustersSize = size_clusters, 
+                     ClustersPixels = ID_clusters,
+                               data = PeakMtx$intensity
+                     )
+ 
+  
+  
+  ### Output format ###
+  #dummy variables
+  d <- NULL             
+  cnt <- 0              #dummy counter
+  IonsData   <- list() 
+  emptyRows  <- c()     #variable used to discart the empty rows in each cluster comparation
+  emptyList  <- c()     #variable used to discard the empty lists in the ions data
+  emptyList1 <- c()     #variable used to discard the empty lists in the volcano symbols
+  emptyList2 <- c()     #variable used to discard the empty lists in the ions data symbols
+  lname <- c()          #variable containing the name of the lists
+  cname <- c()          #names of the columns
+  
+  
+  
+  #Discard data from the comparation between same clusters and naming the lists 
+  for(j in 1:(2^length(clusterSubset)))
   {
     if(is.null(dim(Test[[1]][[j]])))
     {
      d <- c(d,j)
     }
-
-    if(Test[[3]][,(3*j-1)][1]!=1)
-    {
-      cnt <- cnt + 1
-      IonsData[[cnt]]<-Test[[3]][,((3*j-2):(3*j))]
-    }
-  }
-
-  Test[[1]] = Test[[1]][-d]
-  Test[[2]] = Test[[2]][-d]
-  Test[[3]] = IonsData
-  
-  for (h in 1:2)
-  {
-    for (i in 1:length(Test[[h]]))
-    {
-      for (j in 1:length(PeakMtx$mass))
+      else
       {
-        for (k in 1:dim(Test[[h]][[i]])[2])
+        cluster_indexes <- which(intToBits(j-1)==1)
+        if(length(cluster_indexes) >= 2)
         {
-          if ((Test[[h]][[i]][j,k] == 3)||(Test[[h]][[i]][j,k] == 4)) 
+          cname <- paste("Clus_", sort(clusterSubset[cluster_indexes], decreasing = T),sep = "")
+          lname <- c(lname,paste("Clus_", sort(clusterSubset[cluster_indexes], decreasing = T), sep = "", collapse = " vs "))
+          colnames(Test[[1]][[j]]) <- cname
+          colnames(Test[[2]][[j]]) <- cname
+        }
+      }
+    
+    cnt <- cnt + 1
+    IonsData[[cnt]] <- as.data.frame(Test[[3]][ ,((3*j-2):(3*j))])
+  }
+  
+  Test[[1]] <- Test[[1]][-d]
+  Test[[2]] <- Test[[2]][-d]
+  Test[[3]] <- IonsData[-d]
+  
+  names(Test[[1]]) <- lname
+  names(Test[[2]]) <- lname
+  names(Test[[3]]) <- lname
+  
+  
+  
+  #Encoding the symbol matrixes & deleting rows and null lists
+  for(h in 1:2)
+  {
+    emptyList <- c()
+    for(i in 1:length(Test[[h]]))
+    {
+      emptyRows <- c() #reset
+      
+      Test[[h]][[i]] <- cbind(Test[[h]][[i]], as.character(format(PeakMtx$mass, nsmall = 3, digits = 3)))
+      colnames(Test[[h]][[i]])[ncol(Test[[h]][[i]])] <- "Ion" 
+      Test[[h]][[i]] <- cbind(Test[[h]][[i]], as.character(format(1:length(PeakMtx$mass), nsmall = 3, digits = 3)))
+      colnames(Test[[h]][[i]])[ncol(Test[[h]][[i]])] <- "Index" 
+      if(h == 2)
+      {
+        Test[[3]][[i]] <- cbind(Test[[3]][[i]], as.character(format(PeakMtx$mass, nsmall = 3, digits = 3)))
+        Test[[3]][[i]] <- cbind(Test[[3]][[i]], as.character(format(1:length(PeakMtx$mass), nsmall = 3, digits = 3)))
+        colnames(Test[[3]][[i]]) <- c("Zero","p value","FC","Ion","Index") 
+      }
+      
+      for(j in 1:length(PeakMtx$mass))
+      {
+        for(k in 1:(dim(Test[[h]][[i]])[2]-1))
+        {
+          if((Test[[h]][[i]][j,k] == 3) | (Test[[h]][[i]][j,k] == 4))
           {
             Test[[h]][[i]][j,k] <- "DownRegulated"
           }
-          
-          if ((Test[[h]][[i]][j,k] == 1)||(Test[[h]][[i]][j,k] == 2)) 
+
+          if((Test[[h]][[i]][j,k] == 1) | (Test[[h]][[i]][j,k] == 2))
           {
             Test[[h]][[i]][j,k] <- "UpRegulated"
           }
-          
-          if (Test[[h]][[i]][j,k]==0)
+
+          if(Test[[h]][[i]][j,k] == 0)
           {
             Test[[h]][[i]][j,k] <- "--"
           }
         }
+
+        #If one row is empty, remove it later
+        if(all(Test[[h]][[i]][j,-((-1:0)+(dim(Test[[h]][[i]])[2]))] == "--"))
+        {
+          emptyRows <- c(emptyRows,j)
+        }
+      }
+
+      #remove the rows
+      if(length(emptyRows) > 0)
+      {
+        if(length(emptyRows) == length(PeakMtx$mass))
+        {
+          emptyList <- c(emptyList,i)
+        }
+          else
+          {
+            Test[[h]][[i]] <- as.data.frame(Test[[h]][[i]][-emptyRows,])
+          }
+      }
+    }
+    
+    if(!is.null(emptyList))
+    {
+      Test[[h]] <- Test[[h]][-emptyList]
+      if(h == 1)
+      {
+        emptyList1 <- emptyList
+      }
+      
+      if(h == 2)
+      {
+        emptyList2 <- emptyList
+        Test[[3]] <- Test[[3]][-intersect(emptyList1, emptyList2)]
+        names(Test[[3]]) <- lname[-intersect(emptyList1, emptyList2)]
       }
     }
   }
-
-  return(Test)
-  }
-
   
+  
+  
+  #Output throw 
+  return(Test)
+}
+
+#' plotIonDatabyComparedClusters
+#'
+#' @description Plots the data related to the selected ions from the comparasion between the given clusters. 
+#'
+#' @param testResults An rMSIprocPeakMatrix object. 
+#' @param clusterIndex Numeric Vector. A vector containing the cluster index for each pixel coded in numbers from 1 to number of clusters.
+#' @param source String. Z for data from the zeros test, P&FC for data from the p & fc test.
+#' @export
+#'
+
+plotIonDatabyComparedClusters <- function(testResults, clusterIndex, source)
+{
+  df_name <- ""
+  if(source == "Z")
+  {
+    df_name = "ionsFromZeros" 
+  } else
+    {
+      if(source == "P&FC")
+      {
+        df_name = "ionsFromVolcano" 
+      } else
+        {
+          return(writeLines("Wrong source! Must be Z or P&FC"))
+        }
+    }
+ 
+  clusterIndex <- sort(clusterIndex,decreasing = T)
+  name <- ""
+  for(i in 1:length(clusterIndex))
+  {
+    if(i == length(clusterIndex))
+    {
+      name <- paste(name,"Clus_",clusterIndex[i],sep = "")
+    } else
+      {
+        name <- paste(name,"Clus_",clusterIndex[i]," vs ",sep = "")
+      }
+  }
+  
+  if(any(names(testResults[[df_name]]) == name))
+  {
+    df <- testResults$ionsData[[name]]
+    colnames(df) <- c("Z","p","FC","ion","index")
+  } else
+    {
+      writeLines(paste("Wrong list index. List",name,"is not avaliable. Only the following are allowed: \n"))
+      return(print(names(testResults[[df_name]])))
+    }
+  
+  if(source == "Z")
+  {
+    g <- ggplot2::ggplot(data = df[testResults[[df_name]][[name]]$Index,]) + ggplot2::geom_col(mapping = ggplot2::aes(x = ion, y = Z)) +
+      ggplot2::scale_fill_continuous(type = "viridis") +
+      ggplot2::theme_bw() + ggplot2::labs(y = "zero score",x = "m/z", title = paste(name,"zero test")) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = -60, hjust = 0)) 
+  } else
+    {
+      g <- ggplot2::ggplot(data = df[testResults[[df_name]][[name]]$Index,]) + ggplot2::geom_col(mapping = ggplot2::aes(x = ion, y = log2(FC), fill = -log(p))) +
+        ggplot2::scale_fill_continuous(type = "viridis") +
+        ggplot2::theme_bw() + ggplot2::labs(y = "log2(Fold Change)",x = "m/z", title = paste(name,"FC and p test")) +
+        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = -60, hjust = 0)) 
+    }
+  print(g)
+}
+
+
+

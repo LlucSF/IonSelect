@@ -137,12 +137,12 @@ List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int 
     }
   }
 
-  List Results;
-  Results["SymbVolcano"] = Results_v;
-  Results["SymbZERO"] = Results_z;
-  Results["IonsData"] = IonsData;
+  List Results; //Output structure
+  Results["ionsFromVolcano"] = Results_v;
+  Results["ionsFromZeros"] = Results_z;
+  Results["ionsData"] = IonsData;
 
-  //// Deleteing the memory allocated before ////
+  //// Free memory ////
 
   delete[] myLOAD_SP;
   delete[] p_massAxis;

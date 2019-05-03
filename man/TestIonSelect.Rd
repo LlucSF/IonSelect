@@ -4,16 +4,17 @@
 \alias{TestIonSelect}
 \title{TestIonSelect}
 \usage{
-TestIonSelect(PeakMtx, Probability, SegmentedMtx, SgmtsChoose)
+TestIonSelect(PeakMtx, clusters, clusterSubset = unique(clusters),
+  probability = 0.05)
 }
 \arguments{
-\item{PeakMtx}{A matrix of peaks containing mass spectra data}
+\item{PeakMtx}{An rMSIprocPeakMatrix object.}
 
-\item{Probability}{Probability restriction of the test.}
+\item{clusters}{Numeric Vector. A vector containing the cluster index for each pixel coded in numbers from 1 to number of clusters.}
 
-\item{SegmentedMtx}{A matrix containing a segmentated peak matrix.}
+\item{clusterSubset}{Numeric vector containing the index of the clusters which will be avaluated.}
 
-\item{SgmtsChoose}{A vector containing which clusters should be analyzed.}
+\item{probability}{Double. Probability restriction of the test. More information on the paper.}
 }
 \value{
 List containing three elements. The results from the Volcano test, the results from the Zero test and the values of p, FC & Zero scores.
