@@ -263,15 +263,15 @@ plotIonDatabyComparedClusters <- function(testResults, clusterIndex, source)
   
   if(source == "Z")
   {
-    g <- ggplot2::ggplot(data = df[testResults[[df_name]][[name]]$Index,]) + ggplot2::geom_col(mapping = ggplot2::aes(x = ion, y = Z)) +
+    g <- ggplot2::ggplot(data = df[as.integer(levels(testResults[[df_name]][[name]]$Index)),]) + ggplot2::geom_col(mapping = ggplot2::aes(x = ion, y = Z)) +
       ggplot2::scale_fill_continuous(type = "viridis") +
       ggplot2::theme_bw() + ggplot2::labs(y = "zero score",x = "m/z", title = paste(name,"zero test")) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = -60, hjust = 0)) 
   } else
     {
-      g <- ggplot2::ggplot(data = df[testResults[[df_name]][[name]]$Index,]) + ggplot2::geom_col(mapping = ggplot2::aes(x = ion, y = log2(FC), fill = -log(p, base = 10))) +
+      g <- ggplot2::ggplot(data = df[as.integer(levels(testResults[[df_name]][[name]]$Index)),]) + ggplot2::geom_col(mapping = ggplot2::aes(x = ion, y = log2(FC), fill = -log(p, base = 10))) +
         ggplot2::scale_fill_continuous(type = "viridis") +
-        ggplot2::theme_bw() + ggplot2::labs(y = "log2(Fold Change)",x = "m/z", colour = "-log10(p)", title = paste(name,"FC and p test")) +
+        ggplot2::theme_bw() + ggplot2::labs(y = "log2(Fold Change)",x = "m/z", fill = "-log10(p)", title = paste(name,"FC and p test")) +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = -60, hjust = 0)) 
     }
   print(g)
