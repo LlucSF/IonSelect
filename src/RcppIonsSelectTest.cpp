@@ -85,19 +85,25 @@ List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int 
   //// IonsSelect algorithm ////
   /**************************************************************************************************/
 
-
+  //Rcout << "So far so good" << "\n";
   IonsSelect myIonsSelect(myLOAD_SP, numSamples, pTestGroups, nPTestGroups, myGROUP, allSpectrums_p);
+  //Rcout << "Constructor OK" << "\n";
   myIonsSelect.getMeasures();
+  //Rcout << "Measures OK" << "\n";
   myIonsSelect.setBoundaries(m_focalProb);
+  //Rcout << "Boundaries OK" << "\n";
 
-  int totalCombi = pow(2, nPTestGroups); //total number of combinations
-
+  //int totalCombi = pow(2, nPTestGroups); //total number of combinations
+  
+  int totalCombi = std::pow(2,nPTestGroups); //total number of combinations
+  
   List Results_v(totalCombi);
   List Results_z(totalCombi);
-  NumericMatrix IonsData(numCols,totalCombi*3);
+  NumericMatrix IonsData(numCols,nPTestGroups*nPTestGroups*3); //totalCombi*3
   NumericMatrix tmp(numCols,nPTestGroups);
 
-  for(int gr=0; gr<totalCombi; gr++)
+  //Rcout << "Time to point to stuff" << "\n";
+  for(int gr=0; gr<totalCombi; gr++) //TODO meter la funcion del contraste
   {
     nPTestGroups = myIonsSelect.getGroupsFromCombination(gr, pTestGroups);
     if(nPTestGroups<2)
@@ -109,29 +115,23 @@ List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int 
       for (int j = 0; j < nPTestGroups; j++)
       {
         tmp(i,j) = myIonsSelect.m_ionsClusterV_p[i][j];
-        if (j == nPTestGroups-1)
-        {
-          Results_v[gr] = tmp(Range(0,i),Range(0,j));
-        }
       }
     }
+    Results_v[gr] = tmp(Range(0,numCols-1),Range(0,nPTestGroups-1));
 
     for (int i = 0; i < numCols; i++)
     {
       for (int j = 0; j < nPTestGroups; j++)
       {
         tmp(i,j) = myIonsSelect.m_ionsClusterZ_p[i][j];
-        if (j == nPTestGroups-1)
-        {
-          Results_z[gr] = tmp(Range(0,i),Range(0,j));
-        }
       }
     }
+    Results_z[gr] = tmp(Range(0,numCols-1),Range(0,nPTestGroups-1));
   }
 
   for (int i = 0; i < numCols; i++)
   {
-    for (int j = 0; j < totalCombi*3; j++)
+    for (int j = 0; j < (nPTestGroups*nPTestGroups*3); j++) //totalCombi
     {
       IonsData(i,j) = myIonsSelect.m_ionsData_p[i][j];
     }

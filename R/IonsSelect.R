@@ -24,18 +24,21 @@
 #' @param PeakMtx An rMSIprocPeakMatrix object. 
 #' @param clusters Numeric Vector. A vector containing the cluster index for each pixel coded in numbers from 1 to number of clusters.
 #' @param clusterSubset Numeric vector containing the index of the clusters which will be avaluated.
-#' @param probability Double. Probability restriction of the test. More information on the paper.
+#' @param precentile Double. percentile restriction of the test. More information on the paper.
 #' @return List containing three elements. The results from the Volcano test, the results from the Zero test and the values of p, FC & Zero scores. 
 #' @export
 #'
 
-TestIonSelect <- function(PeakMtx, clusters, clusterSubset = unique(clusters), probability = 0.05)
+TestIonSelect <- function(PeakMtx, clusters, clusterSubset = unique(clusters), percentile = 0.01)
 {
-
-  
   ### Imput check and format ###
   clusterSubset <- sort(clusterSubset)
   name_clusters <- unique(clusters)
+  
+  if(length(clusterSubset)<2)
+  {
+    return( writeLines("Wrong cluster indexes. At least two clusters must be selected"))
+  }
   
   for(i in 1:length(clusterSubset))
   {
@@ -54,27 +57,36 @@ TestIonSelect <- function(PeakMtx, clusters, clusterSubset = unique(clusters), p
   ID_clusters <- list()
   for(i in 1:length(clusterSubset))
   {
-    ID_clusters[[i]] <- which(clusters == clusterSubset[i])-1
+    ID_clusters[[i]] <- which(clusters == clusterSubset[i])
   }
   
-  
+  intensityData <- matrix(ncol = length(PeakMtx$mass), nrow = length(unlist(ID_clusters)))
+  min <- 0
+  for(i in 1:length(ID_clusters))
+  {
+    intensityData[(min+1):(length(ID_clusters[[i]])+min),] <- PeakMtx$intensity[ID_clusters[[i]],]
+    ID_clusters[[i]] <- (min+1):(length(ID_clusters[[i]])+min)
+    min <- length(ID_clusters[[i]])
+  }
+
   
   ### C call ###
-  Test <- IonSelectC(   m_focalProb = probability, 
+  Test <- IonSelectC(   m_focalProb = percentile, 
                           numPixels = sum(PeakMtx$numPixels), 
                           SP_Pixels = PeakMtx$numPixels, 
                             numCols = length(PeakMtx$mass),
                            massAxis = PeakMtx$mass, 
-                         numSamples = nrow(PeakMtx$intensity),
+                         #numSamples = nrow(PeakMtx$intensity),
+                        numSamples = nrow(intensityData),
                        nPTestGroups = length(clusterSubset), 
-                      R_pTestGroups = clusterSubset-1,
+                      R_pTestGroups = (1:length(clusterSubset))-1,
                        ClustersSize = size_clusters, 
                      ClustersPixels = ID_clusters,
-                               data = PeakMtx$intensity
+                               data = intensityData
                      )
  
-  
-  
+ 
+
   ### Output format ###
   #dummy variables
   d <- NULL             
@@ -107,19 +119,26 @@ TestIonSelect <- function(PeakMtx, clusters, clusterSubset = unique(clusters), p
           colnames(Test[[2]][[j]]) <- cname
         }
       }
-    
-    cnt <- cnt + 1
-    IonsData[[cnt]] <- as.data.frame(Test[[3]][ ,((3*j-2):(3*j))])
   }
-  
   Test[[1]] <- Test[[1]][-d]
   Test[[2]] <- Test[[2]][-d]
-  Test[[3]] <- IonsData[-d]
-  
   names(Test[[1]]) <- lname
   names(Test[[2]]) <- lname
-  names(Test[[3]]) <- lname
   
+
+  a <- rep(paste("Clus_",clusterSubset, " vs",sep = ""),each = length(clusterSubset))
+  b <- rep(paste("Clus_",clusterSubset,sep = ""),times = length(clusterSubset))
+  ionname <- paste(a,b)
+  for(i in 1:length(clusterSubset)^2)
+  {
+    IonsData[[i]] <- as.data.frame(Test[[3]][ ,((3*i-2):(3*i))])
+    IonsData[[i]] <- cbind(IonsData[[i]], as.character(format(PeakMtx$mass, nsmall = 3, digits = 3)))
+    IonsData[[i]] <- cbind(IonsData[[i]], as.character(format(1:length(PeakMtx$mass), nsmall = 3, digits = 3)))
+    colnames(IonsData[[i]]) <- c("Zero","p value","FC","Ion","Index") 
+  }
+  names(IonsData) <- ionname
+  sameClusterData <- which(unlist(lapply(lapply((strsplit(ionname,split = " vs ")), unique),length))==1)
+  Test[[3]] <- IonsData[-sameClusterData]
   
   
   #Encoding the symbol matrixes & deleting rows and null lists
@@ -134,12 +153,6 @@ TestIonSelect <- function(PeakMtx, clusters, clusterSubset = unique(clusters), p
       colnames(Test[[h]][[i]])[ncol(Test[[h]][[i]])] <- "Ion" 
       Test[[h]][[i]] <- cbind(Test[[h]][[i]], as.character(format(1:length(PeakMtx$mass), nsmall = 3, digits = 3)))
       colnames(Test[[h]][[i]])[ncol(Test[[h]][[i]])] <- "Index" 
-      if(h == 2)
-      {
-        Test[[3]][[i]] <- cbind(Test[[3]][[i]], as.character(format(PeakMtx$mass, nsmall = 3, digits = 3)))
-        Test[[3]][[i]] <- cbind(Test[[3]][[i]], as.character(format(1:length(PeakMtx$mass), nsmall = 3, digits = 3)))
-        colnames(Test[[3]][[i]]) <- c("Zero","p value","FC","Ion","Index") 
-      }
       
       for(j in 1:length(PeakMtx$mass))
       {
@@ -188,13 +201,6 @@ TestIonSelect <- function(PeakMtx, clusters, clusterSubset = unique(clusters), p
       if(h == 1)
       {
         emptyList1 <- emptyList
-      }
-      
-      if(h == 2)
-      {
-        emptyList2 <- emptyList
-        Test[[3]] <- Test[[3]][-intersect(emptyList1, emptyList2)]
-        names(Test[[3]]) <- lname[-intersect(emptyList1, emptyList2)]
       }
     }
   }
@@ -263,9 +269,9 @@ plotIonDatabyComparedClusters <- function(testResults, clusterIndex, source)
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = -60, hjust = 0)) 
   } else
     {
-      g <- ggplot2::ggplot(data = df[testResults[[df_name]][[name]]$Index,]) + ggplot2::geom_col(mapping = ggplot2::aes(x = ion, y = log2(FC), fill = -log(p))) +
+      g <- ggplot2::ggplot(data = df[testResults[[df_name]][[name]]$Index,]) + ggplot2::geom_col(mapping = ggplot2::aes(x = ion, y = log2(FC), fill = -log(p, base = 10))) +
         ggplot2::scale_fill_continuous(type = "viridis") +
-        ggplot2::theme_bw() + ggplot2::labs(y = "log2(Fold Change)",x = "m/z", title = paste(name,"FC and p test")) +
+        ggplot2::theme_bw() + ggplot2::labs(y = "log2(Fold Change)",x = "m/z", colour = "-log10(p)", title = paste(name,"FC and p test")) +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = -60, hjust = 0)) 
     }
   print(g)
