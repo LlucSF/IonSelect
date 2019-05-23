@@ -645,7 +645,7 @@ int IonsSelect::getBestIonIntensity(bool direct, int group, int *grTest_p, int n
 	  if(fabs(ionsMean_p[bestIonsIndex_p[0]])<EPSILON_LD) 
 	   {weight_p[ion]=0; continue;}
 	  weight_p[ion]=ionsMean_p[ion]/ionsMean_p[bestIonsIndex_p[0]];//normalización
-	  if(isnan(weight_p[ion])) weight_p[ion]=0;
+	  if(std::isnan(weight_p[ion])) weight_p[ion]=0;
 	  }
 	
       if(ionsValue_p) 	delete []ionsValue_p;
