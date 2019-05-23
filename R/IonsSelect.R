@@ -24,12 +24,13 @@
 #' @param PeakMtx An rMSIprocPeakMatrix object. 
 #' @param clusters Numeric Vector. A vector containing the cluster index for each pixel coded in numbers from 1 to number of clusters.
 #' @param clusterSubset Numeric vector containing the index of the clusters which will be avaluated.
-#' @param precentile Double. percentile restriction of the test. More information on the paper.
+#' @param precentile Numeric. Percentile restriction of the test. More information on the paper.
+#' @param zeroThreshold Numeric. Intensity value below which an ion is considered a zero.
 #' @return List containing three elements. The results from the Volcano test, the results from the Zero test and the values of p, FC & Zero scores. 
 #' @export
 #'
 
-TestIonSelect <- function(PeakMtx, clusters, clusterSubset = unique(clusters), percentile = 0.01)
+TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,clusterSubset = unique(clusters))
 {
   ### Imput check and format ###
   clusterSubset <- sort(clusterSubset)
@@ -76,13 +77,14 @@ TestIonSelect <- function(PeakMtx, clusters, clusterSubset = unique(clusters), p
                           SP_Pixels = PeakMtx$numPixels, 
                             numCols = length(PeakMtx$mass),
                            massAxis = PeakMtx$mass, 
-                         #numSamples = nrow(PeakMtx$intensity),
-                        numSamples = nrow(intensityData),
+                        #numSamples = nrow(PeakMtx$intensity),
+                         numSamples = nrow(intensityData),
                        nPTestGroups = length(clusterSubset), 
                       R_pTestGroups = (1:length(clusterSubset))-1,
                        ClustersSize = size_clusters, 
                      ClustersPixels = ID_clusters,
-                               data = intensityData
+                               data = intensityData,
+                      zeroThreshold = zeroThreshold
                      )
  
  

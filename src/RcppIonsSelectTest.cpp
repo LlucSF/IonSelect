@@ -26,7 +26,7 @@ using namespace Rcpp;
 List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int numCols,
                 NumericVector massAxis, int numSamples, int nPTestGroups,
                 NumericVector R_pTestGroups, NumericVector ClustersSize,
-                List ClustersPixels, NumericMatrix data)
+                List ClustersPixels, NumericMatrix data, double zeroThreshold)
 {
   //// Reserving memory for the data structures & passing variables ////
 
@@ -84,10 +84,11 @@ List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int 
 
   //// IonsSelect algorithm ////
   /**************************************************************************************************/
-
+  
   //Rcout << "So far so good" << "\n";
   IonsSelect myIonsSelect(myLOAD_SP, numSamples, pTestGroups, nPTestGroups, myGROUP, allSpectrums_p);
-  //Rcout << "Constructor OK" << "\n";
+  //Rcout << "Constructor OK" << "\n
+  myIonsSelect.setThreshold(zeroThreshold);
   myIonsSelect.getMeasures();
   //Rcout << "Measures OK" << "\n";
   myIonsSelect.setBoundaries(m_focalProb);
