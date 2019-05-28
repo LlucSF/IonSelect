@@ -109,6 +109,15 @@ public:
   //7:111->1, 3, 5
   int getGroupsFromCombination(int combination, int *grList);
 
+  //Se analizan los valores medios de cada ion con el propósito de ordenarlos
+  //por significación. Es más significativo cuando el valor medio del grupo 
+  //pasado respecto al valor medio de los grupos considerados es elevado
+  //En bestIonsIndex_p se retornan los índices ordenados segun 'direct' -> 'true'=de mayor a menor significación
+  //En weight_p se retornan los pesos asociados (0..1) ('direct' = 'true => 1=más significativo)
+  int getBestIonIntensity(bool direct, int group, int *grTest, int nGrTest,
+                          int *ions_p, int ionsCount, int *bestIonsIndex_p,
+                          float *weight_p);
+  
 private:
   //Se determinan los limites en Z, P y FC para la selección de iones
   //Recibe los percentiles para delimitar los valores de corte
@@ -127,20 +136,13 @@ private:
   //En weight_p se retornan los pesos asociados (0..1) ('direct' = 'true => 1=más significativo)
   int getBestIonDistances(bool direct, int group, int *ions_p, int ionsCount, char *ionsCode_p, int *bestIonsIndex_p, float *weight_p);
   
-  //Se analizan los valores medios de cada ion con el propósito de ordenarlos
-  //por significación. Es más significativo cuando el valor medio del grupo 
-  //pasado respecto al valor medio de los grupos considerados es elevado
-  //En bestIonsIndex_p se retornan los índices ordenados segun 'direct' -> 'true'=de mayor a menor significación
-  //En weight_p se retornan los pesos asociados (0..1) ('direct' = 'true => 1=más significativo)
-    int getBestIonIntensity(bool direct, int group, int *grTest, int nGrTest, int *ions_p, int ionsCount, int *bestIonsIndex_p, float *weight_p);
-    
+
   //Retorna los índices a un array de doubles de forma que quede ordenado de manera descendente
   //'absolutas' es 'true' si no se debe considerar el signo en los valores del array
   int sortDown(double* bufferIn, int *sort, int size, bool absolutas);
   
-  
-  int 		m_pTestRows, //filas de la matriz de test (iones)
-		m_pTestCols, //columnas de la matriz de test (combinaciones de grupos no repetitivos)
+  int m_pTestRows, //filas de la matriz de test (iones)
+    m_pTestCols, //columnas de la matriz de test (combinaciones de grupos no repetitivos)
 		m_nPixels,	//píxeles totales en la matriz de carga de espectros
 		m_pTestGroups[50], //lista de grupos (clusters) a evaluar
 		m_nPTestGroups; //número de grupos
@@ -155,12 +157,13 @@ private:
 		m_yHighLimit_V;
   float		*m_mzAxis_p; //puntero a array de masas
   
-  int 		m_analyzeGr_p[50], //mantiene los índices a los grupos a analizar(ej. si grupos=3,0,4->índices=1,0,2)
-		m_nAnalyzeGr; //lamaño de la lista
+
   double    m_zProb,    //probablidad acumulada (percentil/100) para los umbrales de las medidas Z, P y FC
             m_pProb,
             m_fcProb;
 public:
+  int 		m_analyzeGr_p[50], //mantiene los índices a los grupos a analizar(ej. si grupos=3,0,4->índices=1,0,2)
+                     m_nAnalyzeGr; //lamaño de la lista
   double 	**m_ionsData_p; //matriz que alberga las variables Z, P, FC sobre todas las combinaciones
   int		**m_ionsClusterZ_p, //matriz con iones seleccionados, variable Z(filas=iones; col=grupos focales)
   **m_ionsClusterV_p; //matriz con iones seleccionados, variables P/FC(filas=iones; col=grupos focales)

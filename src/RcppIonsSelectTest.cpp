@@ -85,32 +85,76 @@ List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int 
   //// IonsSelect algorithm ////
   /**************************************************************************************************/
   
-  //Rcout << "So far so good" << "\n";
   IonsSelect myIonsSelect(myLOAD_SP, numSamples, pTestGroups, nPTestGroups, myGROUP, allSpectrums_p);
-  //Rcout << "Constructor OK" << "\n
   myIonsSelect.setThreshold(zeroThreshold);
   myIonsSelect.getMeasures();
-  //Rcout << "Measures OK" << "\n";
   myIonsSelect.setBoundaries(m_focalProb);
-  //Rcout << "Boundaries OK" << "\n";
-
-  //int totalCombi = pow(2, nPTestGroups); //total number of combinations
   
   int totalCombi = std::pow(2,nPTestGroups); //total number of combinations
   
   List Results_v(totalCombi);
   List Results_z(totalCombi);
-  NumericMatrix IonsData(numCols,nPTestGroups*nPTestGroups*3); //totalCombi*3
-  NumericMatrix tmp(numCols,nPTestGroups);
-
-  //Rcout << "Time to point to stuff" << "\n";
+  NumericMatrix IonsData(numCols, nPTestGroups*nPTestGroups*3); //totalCombi*3
+  NumericMatrix tmp(numCols, nPTestGroups);
+  // New variables starts here
+  int totalUpRegulatedIons=0, upRegulatedIons;
+  int totalDownRegulatedIons=0, downRegulatedIons, regulatedCount=0;
+  bool direct;
+  int *ions_14=NULL, *ions_23=NULL;
+  float *weight14_p=NULL;
+  float *weight23_p=NULL;
+  ions_14 = new int[numCols];
+  ions_23 = new int[numCols];
+  weight14_p = new float[numCols];
+  weight23_p = new float[numCols];
+  // Variables end
+  
   for(int gr=0; gr<totalCombi; gr++) //TODO meter la funcion del contraste
   {
     nPTestGroups = myIonsSelect.getGroupsFromCombination(gr, pTestGroups);
     if(nPTestGroups<2)
       continue;
     myIonsSelect.selection(pTestGroups, nPTestGroups);
+    
+    // New code starts here //////////
+    // upRegulatedIons = myIonsSelect.getAllUpRegulatedNumber();
+    // downRegulatedIons= myIonsSelect.getAllDownRegulatedNumber();
+    // totalUpRegulatedIons += upRegulatedIons;
+    // totalDownRegulatedIons+=downRegulatedIons;
+    // 
 
+    for(int focalGroup=0; focalGroup<myIonsSelect.m_nAnalyzeGr; focalGroup++)
+    {
+      Rcpp::Rcout << "focalGroup " << focalGroup << std::endl;
+      int count_14=0, count_23=0;   
+      
+      //Se extraen los iones upregulated (ions_14) y downregulated (ions_23)
+      for(int ion=0; ion<numCols; ion++) //para todos los iones
+      {
+        if( myIonsSelect.m_ionsClusterZ_p[ion][focalGroup]==1 || myIonsSelect.m_ionsClusterV_p[ion][focalGroup]==4)
+        {
+          ions_14[count_14]=ion;
+          count_14++;
+        }
+        else if( myIonsSelect.m_ionsClusterZ_p[ion][focalGroup]==3 || myIonsSelect.m_ionsClusterV_p[ion][focalGroup]==2)
+        {
+          ions_23[count_23]=ion;
+          count_23++;
+        }
+      }
+      
+      Rcpp::Rcout << "before int ionsindex_14" << std::endl;
+      //Se ordenan según los valores medios de sus magnitudes en el grupo frente al total de grupos
+      int ionsIndex_14[count_14]; //códigos 1 y 4 -> sobre-expresados
+      int ionsIndex_23[count_23]; //códigos 2 y 3 ->   sub-expresados
+      direct=true;
+      Rcpp::Rcout << "getBestIonIntensity call" << std::endl;
+      myIonsSelect.getBestIonIntensity(direct, focalGroup, pTestGroups, nPTestGroups, ions_14, count_14, ionsIndex_14, weight14_p);
+      direct=false;
+      myIonsSelect.getBestIonIntensity(direct, focalGroup, pTestGroups, nPTestGroups, ions_23, count_23, ionsIndex_23, weight23_p);
+    }
+    // New code ends here //////////////////
+    
     for (int i = 0; i < numCols; i++)
     {
       for (int j = 0; j < nPTestGroups; j++)

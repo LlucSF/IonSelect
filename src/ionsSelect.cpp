@@ -385,8 +385,8 @@ int IonsSelect::setZPFcBoundaries()
   if(m_yHighLimit_V>1) m_yHighLimit_V=1;
   if(m_yLowLimit_V<1e-320) m_yLowLimit_V=1e-320;
 
-  printf("p-test constrains:\nZ  range:[0,1...%.3f] [10,0...%.3f] \nFC range:[0,1...%.3f] [10,0...%.3f]\nP  range:[0,0...%.2e] \n", 
-       m_xLowLimit_Z, m_xHighLimit_Z, m_xLowLimit_V, m_xHighLimit_V, m_yLowLimit_V);  
+  // printf("p-test constrains:\nZ  range:[0,1...%.3f] [10,0...%.3f] \nFC range:[0,1...%.3f] [10,0...%.3f]\nP  range:[0,0...%.2e] \n", 
+  //      m_xLowLimit_Z, m_xHighLimit_Z, m_xLowLimit_V, m_xHighLimit_V, m_yLowLimit_V);  
 
   for(int i=0; i<3; i++)
     gsl_histogram_free(h[i]);    
@@ -583,75 +583,111 @@ int IonsSelect::getBestIonDistances(bool direct, int group, int *ions_p, int ion
   //En weight_p se retornan los pesos asociados (0..1) ('direct' = 'true => 1=más significativo)
 int IonsSelect::getBestIonIntensity(bool direct, int group, int *grTest_p, int nGrTest, int *ions_p, int ionsCount, int *bestIonsIndex_p, float *weight_p)
   {
-  int *ionsIndex_p=NULL, grSize;
-  int gr, nPixels, px, pxCount;	
-  double *ionsMean_p=NULL,*ionsValue_p=NULL, *ionsValueGr_p=NULL;
-  double ionMeanGr, ionMean;
-//  int nPixels=m_nPixels;
+    int *ionsIndex_p=NULL, grSize;
+    int gr, nPixels, px, pxCount;	
+    double *ionsMean_p=NULL,*ionsValue_p=NULL, *ionsValueGr_p=NULL;
+    double ionMeanGr, ionMean;
+    // int nPixels=m_nPixels;
 
+    Rcpp::Rcout << "STOP 1" << std::endl;
+    
     grSize=m_allGroups_p[group].size;
+    Rcpp::Rcout << "STOP 1.1" << std::endl;
     if((ionsValue_p=new double[m_nPixels])==NULL)
         {printf("ERROR new() in makeFileFromFile()\n"); return -1;}
+    Rcpp::Rcout << "STOP 1.2" << std::endl;
     if((ionsValueGr_p=new double[grSize])==NULL)
         {printf("ERROR new() in makeFileFromFile()\n"); return -1;}
+    Rcpp::Rcout << "STOP 1.3" << std::endl;
     if((ionsMean_p=new double[ionsCount])==NULL)
         {printf("ERROR new() in makeFileFromFile()\n"); return -1;}
-	
-    for(int ion=0; ion<ionsCount; ion++)
+    
+    Rcpp::Rcout << "STOP 2" << std::endl;
+    
+  for(int ion=0; ion<ionsCount; ion++)
 	{
-	for(int i=0; i<grSize; i++)
+	  for(int i=0; i<grSize; i++)
 	  {
-	  px=m_allGroups_p[group].set[i];
-	  ionsValueGr_p[i]=m_allSpectrums_p[px][ions_p[ion]];	
+	    px=m_allGroups_p[group].set[i];
+	    ionsValueGr_p[i]=m_allSpectrums_p[px][ions_p[ion]];	
 	  }
-//	ionVarGr=gsl_stats_variance(ionsValue_p, 1, grSize);
-	ionMeanGr=gsl_stats_mean(ionsValueGr_p, 1, grSize); //media del ion en el grupo focal
+    //ionVarGr=gsl_stats_variance(ionsValue_p, 1, grSize);
+	  ionMeanGr=gsl_stats_mean(ionsValueGr_p, 1, grSize); //media del ion en el grupo focal
 	
 	//Se obtiene la media de todos los grupos considerados (que pueden no ser todos los de la muestra)
-	pxCount=0;
-	for(int gri=0; gri<nGrTest; gri++)
+	  pxCount=0;
+	  for(int gri=0; gri<nGrTest; gri++)
 	  {
-	  gr=grTest_p[gri]; //un grupos del conjunto de grupos considerados
-	  nPixels=m_allGroups_p[gr].size; //tamaño del grupo
-	  for(int i=0; i<nPixels; i++) //para todos los píxeles del grupo
-	    {
-	    px=m_allGroups_p[gr].set[i]; //un pixel del grupo
-	    ionsValue_p[pxCount]=m_allSpectrums_p[px][ions_p[ion]]; //magnitud del ion para ese pixel
-	    pxCount++; //contador
-	    }
-	  }
+  	  gr=grTest_p[gri]; //un grupos del conjunto de grupos considerados
+  	  nPixels=m_allGroups_p[gr].size; //tamaño del grupo
+  	  for(int i=0; i<nPixels; i++) //para todos los píxeles del grupo
+  	  {
+  	    px=m_allGroups_p[gr].set[i]; //un pixel del grupo
+  	    ionsValue_p[pxCount]=m_allSpectrums_p[px][ions_p[ion]]; //magnitud del ion para ese pixel
+  	    pxCount++; //contador
+  	  }
+	  } 
 	//Se obtiene la media de todos los grupos de la muestra
-	ionMean=gsl_stats_mean(ionsValue_p, 1, pxCount); //media del ion en todos los grupos considerados
-	if(ionMean<EPSILON_LD && ionMeanGr<EPSILON_LD)
-	  ionsMean_p[ion]=0;
-	else
+	  ionMean=gsl_stats_mean(ionsValue_p, 1, pxCount); //media del ion en todos los grupos considerados
+	  if(ionMean<EPSILON_LD && ionMeanGr<EPSILON_LD)
 	  {
-	  if(fabs(ionMean)<EPSILON_LD) ionMean=EPSILON_LD;
-	  if(fabs(ionMeanGr)<EPSILON_LD) ionMeanGr=EPSILON_LD;
-	  if(direct)
-	    ionsMean_p[ion]=ionMeanGr/ionMean; //directo->valores elevados
-	  else
-	    ionsMean_p[ion]=ionMean/ionMeanGr; //inverso->valores pequeños
-	  //Saturación: evita ordenaciones extrañas 
-	  if(ionsMean_p[ion]>100)ionsMean_p[ion]=100.0; 
-	  if(ionsMean_p[ion]<0.01)ionsMean_p[ion]=0.01; 
+	    ionsMean_p[ion]=0;
 	  }
+  	  else
+  	  {
+    	  if(fabs(ionMean) < EPSILON_LD) ionMean=EPSILON_LD;
+    	  if(fabs(ionMeanGr) < EPSILON_LD) ionMeanGr=EPSILON_LD;
+    	  if(direct)
+    	    ionsMean_p[ion]=ionMeanGr/ionMean; //directo->valores elevados
+    	  else
+    	    ionsMean_p[ion]=ionMean/ionMeanGr; //inverso->valores pequeños
+    	  //Saturación: evita ordenaciones extrañas 
+    	  if(ionsMean_p[ion]>100)ionsMean_p[ion]=100.0; 
+    	  if(ionsMean_p[ion]<0.01)ionsMean_p[ion]=0.01; 
+  	  }
 	}
-      sortDown(ionsMean_p, bestIonsIndex_p, ionsCount, true); //ordenación up->down
+  
+  Rcpp::Rcout << "STOP 3" << std::endl;
 
-      if(weight_p)
-	for(int ion=0; ion<ionsCount; ion++)
+
+  for(int i = 0; i < ionsCount; i++)
+  {
+    Rcpp::Rcout << ionsMean_p[i] << " " << i << std::endl;
+  }
+  sortDown(ionsMean_p, bestIonsIndex_p, ionsCount, true); //ordenación up->down
+  
+  Rcpp::Rcout << "STOP 3.1" << std::endl;
+  
+  if(weight_p)
+  {
+    Rcpp::Rcout << "inside" << std::endl;
+	  for(int ion=0; ion<ionsCount; ion++)
 	  {
-	  if(fabs(ionsMean_p[bestIonsIndex_p[0]])<EPSILON_LD) 
-	   {weight_p[ion]=0; continue;}
-	  weight_p[ion]=ionsMean_p[ion]/ionsMean_p[bestIonsIndex_p[0]];//normalización
-	  if(std::isnan(weight_p[ion])) weight_p[ion]=0;
+	    Rcpp::Rcout << "inside 1" << std::endl;
+	    Rcpp::Rcout << "inside best ions index" << bestIonsIndex_p[0] << std::endl;
+  	  if(fabs(ionsMean_p[bestIonsIndex_p[0]]) < EPSILON_LD) 
+  	  {
+  	    Rcpp::Rcout << "inside 2" << std::endl;
+  	    weight_p[ion]=0;
+  	    continue;
+  	  }
+  	  Rcpp::Rcout << "inside 3" << std::endl;
+  	  weight_p[ion]=ionsMean_p[ion]/ionsMean_p[bestIonsIndex_p[0]];//normalización
+  	  Rcpp::Rcout << "inside 4" << std::endl;
+  	  if(std::isnan(weight_p[ion]))
+  	  {
+  	    weight_p[ion]=0;
+  	  }
+  	  Rcpp::Rcout << "inside 5" << std::endl;
 	  }
-	
-      if(ionsValue_p) 	delete []ionsValue_p;
-      if(ionsValueGr_p) delete []ionsValueGr_p;
-      if(ionsMean_p) 	delete []ionsMean_p;
-      return 0;
+  }
+  
+	Rcpp::Rcout << "STOP 4" << std::endl;
+  
+  if(ionsValue_p) 	delete []ionsValue_p;
+  if(ionsValueGr_p) delete []ionsValueGr_p;
+  if(ionsMean_p) 	delete []ionsMean_p;
+  return 0;
 }
 
 //Genera el fichero fileName con info extraida del test de selección de iones
@@ -1162,39 +1198,49 @@ int IonsSelect::getDownRegulated(int focalGroup, int *grTest_p, int nGrTest, cha
 //'absolutas' es 'true' si no se debe considerar el signo en los valores del array
 int IonsSelect::sortDown(double* bufferIn, int *sort, int size, bool absolutas)
 {
-int k=0, j;// end=m_m_distributionSize;
-double  mayor;
-double  list[size];
-#ifndef DBL_MAX
-#define DBL_MAX 1e-300
-#endif
+  int k=0, j = 0;// end=m_m_distributionSize;
+  double  mayor;
+  double  list[size];
 
-if(size==0) return 0; 
-for(j=0; j<size; j++)
-{
-  if(absolutas)
-    list[j]=fabs(bufferIn[j]); //copia ya que se producen cambios en el contenido
-  else
-    list[j]=bufferIn[j]; //copia ya que se producen cambios en el contenido
-}
-
-if(size==1) sort[0]=0;//Si sólo hay uno ya está ordenado. Si no hay ninguno -> no hacer nada
-do
-	{
-	mayor=-DBL_MAX; //minor<=minValue.
-	for(j=0; j<size; j++)
-		{
-		if((list[j])>mayor) 
-			{
-			mayor=list[j];
-			sort[k]=j;
-			}
-		}
+  //Rcpp::Rcout << "STOP 1a" << std::endl;
   
-	list[sort[k]]=-DBL_MAX;
-	k++;
+  if(size==0) return 0; 
+  
+  for(j=0; j<size; j++)
+  {
+    if(absolutas)
+      list[j]=fabs(bufferIn[j]); //copia ya que se producen cambios en el contenido
+    else
+      list[j]=bufferIn[j]; //copia ya que se producen cambios en el contenido
+  }
+  
+  //Rcpp::Rcout << "STOP 2a" << std::endl;
+  
+  if(size==1) sort[0]=0;//Si sólo hay uno ya está ordenado. Si no hay ninguno -> no hacer nada
+ 
+  Rcpp::Rcout << "size" << size << std::endl;
+  
+  while(k<size)
+	{
+    //Rcpp::Rcout << "k " << k << std::endl;
+  	mayor = -1e-300; //minor<=minValue.
+  	for(int j=0; j<size; j++)
+  	{
+  		if((list[j])>mayor) 
+  		{
+  			mayor=list[j];
+  			sort[k]=j;
+  		}
+  	}
+  //	Rcpp::Rcout << "j out" << std::endl;
+  //	Rcpp::Rcout << "sort[k] " << sort[k] << std::endl;
+  //	Rcpp::Rcout << "list[sort[k]] " << list[sort[k]] << std::endl;
+  //	list[sort[k]] = -1e-300;
+  	Rcpp::Rcout << "list out" << std::endl;
+  	k++;
 	}
-while(k<size);
+
+Rcpp::Rcout << "STOP 3a" << std::endl;
 return 0;
 }
 
