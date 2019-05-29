@@ -30,7 +30,7 @@
 #' @export
 #'
 
-TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,clusterSubset = unique(clusters))
+TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,clusterSubset = sort(unique(clusters)))
 {
   ### Imput check and format ###
   clusterSubset <- sort(clusterSubset)
@@ -73,12 +73,15 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,c
   
   ### C call ###
   Test <- IonSelectC(   m_focalProb = percentile, 
-                          numPixels = sum(PeakMtx$numPixels), 
-                          SP_Pixels = PeakMtx$numPixels, 
+                          numPixels = sum(PeakMtx$numPixels),
+                          SP_Pixels = c(PeakMtx$numPixels),
+                         # numPixels = nrow(intensityData), 
+                         # SP_Pixels = nrow(intensityData),                    
                             numCols = length(PeakMtx$mass),
                            massAxis = PeakMtx$mass, 
-                        #numSamples = nrow(PeakMtx$intensity),
-                         numSamples = nrow(intensityData),
+                        # numSamples = nrow(PeakMtx$intensity),
+                        # numSamples = nrow(intensityData),
+                        numSamples = 1,
                        nPTestGroups = length(clusterSubset), 
                       R_pTestGroups = (1:length(clusterSubset))-1,
                        ClustersSize = size_clusters, 
@@ -207,6 +210,9 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,c
     }
   }
   
+  
+  # Contrast parameter
+
   
   
   #Output throw 

@@ -85,28 +85,28 @@ float** IonsTreat::getPMatrix()
     }
     
     
-  FILE* fp;
-  fp=fopen("matrixP.txt", "w");
-  for(int rowA=0; rowA< m_matrixRows; rowA++)
-    {
-    fprintf(fp,"[%3d]", rowA);
-    for(int rowB=0; rowB< m_matrixRows; rowB++)
-//      fprintf(fp, "%5.3f ", m_pMatrix[rowA][rowB]);
-      fprintf(fp, "%+.3e ", m_pMatrix[rowA][rowB]);
-    fprintf(fp,"\n");
-    }
-  fclose(fp);
+//   FILE* fp;
+//   fp=fopen("matrixP.txt", "w");
+//   for(int rowA=0; rowA< m_matrixRows; rowA++)
+//     {
+//     fprintf(fp,"[%3d]", rowA);
+//     for(int rowB=0; rowB< m_matrixRows; rowB++)
+// //      fprintf(fp, "%5.3f ", m_pMatrix[rowA][rowB]);
+//       fprintf(fp, "%+.3e ", m_pMatrix[rowA][rowB]);
+//     fprintf(fp,"\n");
+//     }
+//   fclose(fp);
   
-  fp=fopen("matrixP_gr2.txt", "w");
-  for(int rowA=0; rowA< m_matrixRows; rowA++)
-    {
-    fprintf(fp,"[%3d]", rowA);
-    for(int rowB=0; rowB< m_matrixRows; rowB++)
-      if(m_pMatrix[rowA][rowB]>=0.25)
-	fprintf(fp, "%d ",rowB);
-    fprintf(fp,"\n");
-    }
-  fclose(fp);
+//   fp=fopen("matrixP_gr2.txt", "w");
+//   for(int rowA=0; rowA< m_matrixRows; rowA++)
+//     {
+//     fprintf(fp,"[%3d]", rowA);
+//     for(int rowB=0; rowB< m_matrixRows; rowB++)
+//       if(m_pMatrix[rowA][rowB]>=0.25)
+// 	fprintf(fp, "%d ",rowB);
+//     fprintf(fp,"\n");
+//     }
+//   fclose(fp);
     
  return m_pMatrix;
 }
@@ -245,15 +245,15 @@ float ** IonsTreat::getFoldChangeMatrix()
       }
     }
     
-  FILE* fp;
-  fp=fopen("matrixFC.txt", "w");
-  for(int rowA=0; rowA< m_matrixRows; rowA++)
-    {
-    fprintf(fp,"[%3d]", rowA);
-    for(int rowB=0; rowB< m_matrixRows; rowB++)
-      fprintf(fp, "%5.1f ", m_fcMatrix[rowA][rowB]);
-    fprintf(fp,"\n");
-    }
+  // FILE* fp;
+  // fp=fopen("matrixFC.txt", "w");
+  // for(int rowA=0; rowA< m_matrixRows; rowA++)
+  //   {
+  //   fprintf(fp,"[%3d]", rowA);
+  //   for(int rowB=0; rowB< m_matrixRows; rowB++)
+  //     fprintf(fp, "%5.1f ", m_fcMatrix[rowA][rowB]);
+  //   fprintf(fp,"\n");
+  //   }
  return m_fcMatrix;
 
 }
@@ -302,7 +302,7 @@ double IonsTreat::getFoldChange(float *dataA_f, float* dataB_f, int sizeA, int s
 
   fc=medianA/medianB;
   if(isnan(fc)) 
-    printf("%e %e %d %d\n", medianA, medianB, sizeA2, sizeB2);
+    //printf("%e %e %d %d\n", medianA, medianB, sizeA2, sizeB2);
   if(fc>=9.9999 && signo>0) 
     fc=9.9999;
   else if(fc>=9.9999 && signo<0) 
@@ -355,7 +355,7 @@ double IonsTreat::getFoldChange(double *dataA, double* dataB, int sizeA, int siz
 
   fc=medianA/medianB;
   if(isnan(fc)) 
-    printf("%e %e %d %d\n", medianA, medianB, sizeA2, sizeB2);
+    //printf("%e %e %d %d\n", medianA, medianB, sizeA2, sizeB2);
   if(fc>=9.9999 && signo>0) 
     fc=9.9999;
   else if(fc>=9.9999 && signo<0) 

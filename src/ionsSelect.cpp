@@ -113,19 +113,22 @@ int IonsSelect::getMeasures()
     if(m_allGroups_p[m_pTestGroups[i]].size>maxGroupSize) 
       maxGroupSize=m_allGroups_p[m_pTestGroups[i]].size;
     
+    
   //memoria para array de iones a comparar
   if((ionsA_p=new double[maxGroupSize])==NULL)
     {printf("ERROR new() in getMeasures()"); return -1;}
   if((ionsB_p=new double[maxGroupSize])==NULL)
     {printf("ERROR new() in getMeasures()"); return -1;}
-    
+  
+  
   //Memoria para la matriz ionsData
   if((m_ionsData_p=new double*[m_pTestRows])==NULL) //iones
     {printf("ERROR new() in getMeasures()"); return -1;}
   for(int i=0; i<m_pTestRows; i++)
     if((m_ionsData_p[i]=new double[m_pTestCols*3])==NULL)//combinaciones de todos los grupos
       {printf("ERROR new() in getMeasures()"); return -1;}
-      
+    
+    
 double p0, p1, zeroRate;
 int col=0;  
   //Se da valor a una matriz de filas=nº iones y columnas=nGrops*nGroups (todas las combinaciones posibles!!!!)
@@ -156,6 +159,7 @@ int col=0;
             }
 //if(pGri==3 && ion==8)
 //    printf("\n");
+
         m_ionsData_p[ion][col+1]=ionsTreat.getMannWhitneyUTest(ionsA_p, ionsB_p, pSize, sSize, &zeroRate, 1);
         m_ionsData_p[ion][col+0]=zeroRate;	
         m_ionsData_p[ion][col+2]=ionsTreat.getFoldChange(ionsA_p, ionsB_p, pSize, sSize);
@@ -584,25 +588,25 @@ int IonsSelect::getBestIonDistances(bool direct, int group, int *ions_p, int ion
 int IonsSelect::getBestIonIntensity(bool direct, int group, int *grTest_p, int nGrTest, int *ions_p, int ionsCount, int *bestIonsIndex_p, float *weight_p)
   {
     int *ionsIndex_p=NULL, grSize;
-    int gr, nPixels, px, pxCount;	
+    int gr, px, pxCount;	
     double *ionsMean_p=NULL,*ionsValue_p=NULL, *ionsValueGr_p=NULL;
     double ionMeanGr, ionMean;
-    // int nPixels=m_nPixels;
+    int nPixels=m_nPixels;
 
-    Rcpp::Rcout << "STOP 1" << std::endl;
-    
+    Rcpp::Rcout << "STOP 1 " ;
+    Rcpp::Rcout << m_nPixels << std::endl;
+    Rcpp::Rcout << nPixels << std::endl;
     grSize=m_allGroups_p[group].size;
-    Rcpp::Rcout << "STOP 1.1" << std::endl;
-    if((ionsValue_p=new double[m_nPixels])==NULL)
+    if((ionsValue_p=new double[nPixels])==NULL)
         {printf("ERROR new() in makeFileFromFile()\n"); return -1;}
-    Rcpp::Rcout << "STOP 1.2" << std::endl;
+    
     if((ionsValueGr_p=new double[grSize])==NULL)
         {printf("ERROR new() in makeFileFromFile()\n"); return -1;}
-    Rcpp::Rcout << "STOP 1.3" << std::endl;
+    
     if((ionsMean_p=new double[ionsCount])==NULL)
         {printf("ERROR new() in makeFileFromFile()\n"); return -1;}
     
-    Rcpp::Rcout << "STOP 2" << std::endl;
+    Rcpp::Rcout << "STOP 2 " ;
     
   for(int ion=0; ion<ionsCount; ion++)
 	{
@@ -635,8 +639,8 @@ int IonsSelect::getBestIonIntensity(bool direct, int group, int *grTest_p, int n
 	  }
   	  else
   	  {
-    	  if(fabs(ionMean) < EPSILON_LD) ionMean=EPSILON_LD;
-    	  if(fabs(ionMeanGr) < EPSILON_LD) ionMeanGr=EPSILON_LD;
+    	  if(std::fabs(ionMean) < EPSILON_LD) ionMean=EPSILON_LD;
+    	  if(std::fabs(ionMeanGr) < EPSILON_LD) ionMeanGr=EPSILON_LD;
     	  if(direct)
     	    ionsMean_p[ion]=ionMeanGr/ionMean; //directo->valores elevados
     	  else
@@ -647,7 +651,7 @@ int IonsSelect::getBestIonIntensity(bool direct, int group, int *grTest_p, int n
   	  }
 	}
   
-  Rcpp::Rcout << "STOP 3" << std::endl;
+  Rcpp::Rcout << "STOP 3 " ;
 
 
   for(int i = 0; i < ionsCount; i++)
@@ -656,29 +660,24 @@ int IonsSelect::getBestIonIntensity(bool direct, int group, int *grTest_p, int n
   }
   sortDown(ionsMean_p, bestIonsIndex_p, ionsCount, true); //ordenación up->down
   
-  Rcpp::Rcout << "STOP 3.1" << std::endl;
+  Rcpp::Rcout << "STOP 3.1 " ;
   
   if(weight_p)
   {
-    Rcpp::Rcout << "inside" << std::endl;
+    Rcpp::Rcout << "inside " ;
 	  for(int ion=0; ion<ionsCount; ion++)
 	  {
-	    Rcpp::Rcout << "inside 1" << std::endl;
-	    Rcpp::Rcout << "inside best ions index" << bestIonsIndex_p[0] << std::endl;
-  	  if(fabs(ionsMean_p[bestIonsIndex_p[0]]) < EPSILON_LD) 
+  	  if(std::fabs(ionsMean_p[bestIonsIndex_p[0]]) < EPSILON_LD) 
   	  {
-  	    Rcpp::Rcout << "inside 2" << std::endl;
   	    weight_p[ion]=0;
   	    continue;
   	  }
-  	  Rcpp::Rcout << "inside 3" << std::endl;
   	  weight_p[ion]=ionsMean_p[ion]/ionsMean_p[bestIonsIndex_p[0]];//normalización
-  	  Rcpp::Rcout << "inside 4" << std::endl;
   	  if(std::isnan(weight_p[ion]))
   	  {
   	    weight_p[ion]=0;
   	  }
-  	  Rcpp::Rcout << "inside 5" << std::endl;
+  	  Rcpp::Rcout << "inside 5 ";
 	  }
   }
   
