@@ -593,9 +593,6 @@ int IonsSelect::getBestIonIntensity(bool direct, int group, int *grTest_p, int n
     double ionMeanGr, ionMean;
     int nPixels=m_nPixels;
 
-    Rcpp::Rcout << "STOP 1 " ;
-    Rcpp::Rcout << m_nPixels << std::endl;
-    Rcpp::Rcout << nPixels << std::endl;
     grSize=m_allGroups_p[group].size;
     if((ionsValue_p=new double[nPixels])==NULL)
         {printf("ERROR new() in makeFileFromFile()\n"); return -1;}
@@ -605,8 +602,6 @@ int IonsSelect::getBestIonIntensity(bool direct, int group, int *grTest_p, int n
     
     if((ionsMean_p=new double[ionsCount])==NULL)
         {printf("ERROR new() in makeFileFromFile()\n"); return -1;}
-    
-    Rcpp::Rcout << "STOP 2 " ;
     
   for(int ion=0; ion<ionsCount; ion++)
 	{
@@ -651,20 +646,10 @@ int IonsSelect::getBestIonIntensity(bool direct, int group, int *grTest_p, int n
   	  }
 	}
   
-  Rcpp::Rcout << "STOP 3 " ;
-
-
-  for(int i = 0; i < ionsCount; i++)
-  {
-    Rcpp::Rcout << ionsMean_p[i] << " " << i << std::endl;
-  }
   sortDown(ionsMean_p, bestIonsIndex_p, ionsCount, true); //ordenación up->down
-  
-  Rcpp::Rcout << "STOP 3.1 " ;
   
   if(weight_p)
   {
-    Rcpp::Rcout << "inside " ;
 	  for(int ion=0; ion<ionsCount; ion++)
 	  {
   	  if(std::fabs(ionsMean_p[bestIonsIndex_p[0]]) < EPSILON_LD) 
@@ -677,11 +662,8 @@ int IonsSelect::getBestIonIntensity(bool direct, int group, int *grTest_p, int n
   	  {
   	    weight_p[ion]=0;
   	  }
-  	  Rcpp::Rcout << "inside 5 ";
 	  }
   }
-  
-	Rcpp::Rcout << "STOP 4" << std::endl;
   
   if(ionsValue_p) 	delete []ionsValue_p;
   if(ionsValueGr_p) delete []ionsValueGr_p;
@@ -1200,8 +1182,6 @@ int IonsSelect::sortDown(double* bufferIn, int *sort, int size, bool absolutas)
   int k=0, j = 0;// end=m_m_distributionSize;
   double  mayor;
   double  list[size];
-
-  //Rcpp::Rcout << "STOP 1a" << std::endl;
   
   if(size==0) return 0; 
   
@@ -1213,15 +1193,10 @@ int IonsSelect::sortDown(double* bufferIn, int *sort, int size, bool absolutas)
       list[j]=bufferIn[j]; //copia ya que se producen cambios en el contenido
   }
   
-  //Rcpp::Rcout << "STOP 2a" << std::endl;
-  
   if(size==1) sort[0]=0;//Si sólo hay uno ya está ordenado. Si no hay ninguno -> no hacer nada
- 
-  Rcpp::Rcout << "size" << size << std::endl;
   
   while(k<size)
 	{
-    //Rcpp::Rcout << "k " << k << std::endl;
   	mayor = -1e-300; //minor<=minValue.
   	for(int j=0; j<size; j++)
   	{
@@ -1231,15 +1206,9 @@ int IonsSelect::sortDown(double* bufferIn, int *sort, int size, bool absolutas)
   			sort[k]=j;
   		}
   	}
-  //	Rcpp::Rcout << "j out" << std::endl;
-  //	Rcpp::Rcout << "sort[k] " << sort[k] << std::endl;
-  //	Rcpp::Rcout << "list[sort[k]] " << list[sort[k]] << std::endl;
-  //	list[sort[k]] = -1e-300;
-  	Rcpp::Rcout << "list out" << std::endl;
   	k++;
 	}
 
-Rcpp::Rcout << "STOP 3a" << std::endl;
 return 0;
 }
 

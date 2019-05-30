@@ -213,7 +213,7 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,c
   
   # Contrast parameter
 
-  
+  Test <- order_results_by_contrast(Test, PeakMtx, clusterSubset)
   
   #Output throw 
   return(Test)

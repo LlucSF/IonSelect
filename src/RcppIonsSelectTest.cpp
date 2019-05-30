@@ -94,20 +94,6 @@ List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int 
   List Results_z(totalCombi);
   NumericMatrix IonsData(numCols, nPTestGroups*nPTestGroups*3); //totalCombi*3
   NumericMatrix tmp(numCols, nPTestGroups);
-  // New variables starts here
-  // Rcpp::Rcout << "New variables " << std::endl;
-  // 
-  // int totalUpRegulatedIons=0, upRegulatedIons;
-  // int totalDownRegulatedIons=0, downRegulatedIons, regulatedCount=0;
-  // bool direct;
-  // int *ions_14=NULL, *ions_23=NULL;
-  // float *weight14_p=NULL;
-  // float *weight23_p=NULL;
-  // ions_14 = new int[numCols];
-  // ions_23 = new int[numCols];
-  // weight14_p = new float[numCols];
-  // weight23_p = new float[numCols];
-  // Variables end
 
   for(int gr=0; gr<totalCombi; gr++)  
   {
@@ -115,45 +101,6 @@ List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int 
     if(nPTestGroups<2)
       continue;
     myIonsSelect.selection(pTestGroups, nPTestGroups);
-    
-    // New code starts here //////////
-    // Rcpp::Rcout << "New code " << std::endl;
-    // upRegulatedIons = myIonsSelect.getAllUpRegulatedNumber();
-    // downRegulatedIons= myIonsSelect.getAllDownRegulatedNumber();
-    // totalUpRegulatedIons += upRegulatedIons;
-    // totalDownRegulatedIons+=downRegulatedIons;
-    // 
-    // 
-    // for(int focalGroup=0; focalGroup<myIonsSelect.m_nAnalyzeGr; focalGroup++)
-    // {
-    //  
-    //   int count_14=0, count_23=0;
-    // 
-    //   //Se extraen los iones upregulated (ions_14) y downregulated (ions_23)
-    //   for(int ion=0; ion<numCols; ion++) //para todos los iones
-    //   {
-    //     if( myIonsSelect.m_ionsClusterZ_p[ion][focalGroup]==1 || myIonsSelect.m_ionsClusterV_p[ion][focalGroup]==4)
-    //     {
-    //       ions_14[count_14]=ion;
-    //       count_14++;
-    //     }
-    //     else if( myIonsSelect.m_ionsClusterZ_p[ion][focalGroup]==3 || myIonsSelect.m_ionsClusterV_p[ion][focalGroup]==2)
-    //     {
-    //       ions_23[count_23]=ion;
-    //       count_23++;
-    //     }
-    //   }
-    // 
-    //   //Se ordenan según los valores medios de sus magnitudes en el grupo frente al total de grupos
-    //   int ionsIndex_14[count_14]; //códigos 1 y 4 -> sobre-expresados
-    //   int ionsIndex_23[count_23]; //códigos 2 y 3 ->   sub-expresados
-    //   direct=true;
-    // 
-    //   myIonsSelect.getBestIonIntensity(direct, focalGroup, pTestGroups, nPTestGroups, ions_14, count_14, ionsIndex_14, weight14_p);
-    //   direct=false;
-    //   myIonsSelect.getBestIonIntensity(direct, focalGroup, pTestGroups, nPTestGroups, ions_23, count_23, ionsIndex_23, weight23_p);
-    // }
-    // New code ends here //////////////////
     
     for (int i = 0; i < numCols; i++)
     {
@@ -187,12 +134,6 @@ List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int 
   Results["ionsFromZeros"] = Results_z;
   Results["ionsData"] = IonsData;
 
-  //// Free memory ////
-  // delete[] ions_14;
-  // delete[] ions_23;
-  // delete[] weight14_p;
-  // delete[] weight23_p;
-  // 
   delete[] myLOAD_SP;
   delete[] p_massAxis;
 

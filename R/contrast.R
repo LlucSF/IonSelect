@@ -1,3 +1,20 @@
+#########################################################################
+#
+#     Copyright (C) 2019 - Lluc Sementé Fernàndez
+#
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+############################################################################
 
 generate_contrast_data_structure <- function(peak_matrix, clustering_vector)
 {
@@ -35,7 +52,6 @@ generate_contrast_data_structure <- function(peak_matrix, clustering_vector)
 }
 
 
-
 get_indexes_from_name <- function(name)
 {
   rest <- c()
@@ -49,7 +65,6 @@ get_indexes_from_name <- function(name)
   
   return(rest)
 }
-
 
 
 order_by_contrast <- function(list, name, contrast_data, pair = T)
@@ -78,8 +93,6 @@ order_by_contrast <- function(list, name, contrast_data, pair = T)
   list$contrast <- contrast_values[contrast_order]
   return(list)
 }
-
-
 
 
 order_results_by_contrast <- function(results, peak_matrix, clustering_vector)
@@ -111,12 +124,10 @@ order_results_by_contrast <- function(results, peak_matrix, clustering_vector)
     }
   }
   
-  
-  
   return(results)
 }
 
-list_name <- names(results$ionsFromVolcano)[1]
-results <- r
-results <- order_results_by_contrast(results, peak_matrix, clustering_vector)
+# list_name <- names(results$ionsFromVolcano)[1]
+# results <- r
+# results <- order_results_by_contrast(results, peak_matrix, clustering_vector)
 
