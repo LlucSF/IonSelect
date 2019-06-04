@@ -23,7 +23,7 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 
-List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int numCols,
+List IonSelectC(double zPercentil, double pPercentil, double fcPercentil, int numPixels, NumericVector SP_Pixels, int numCols,
                 NumericVector massAxis, int numSamples, int nPTestGroups,
                 NumericVector R_pTestGroups, NumericVector ClustersSize,
                 List ClustersPixels, NumericMatrix data, double zeroThreshold)
@@ -86,7 +86,7 @@ List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int 
   IonsSelect myIonsSelect(myLOAD_SP, numSamples, pTestGroups, nPTestGroups, myGROUP, allSpectrums_p);
   myIonsSelect.setThreshold(zeroThreshold);
   myIonsSelect.getMeasures();
-  myIonsSelect.setBoundaries(m_focalProb);
+  myIonsSelect.setBoundaries(zPercentil,pPercentil,fcPercentil);
   
   int totalCombi = std::pow(2,nPTestGroups); //total number of combinations
   

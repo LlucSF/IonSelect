@@ -31,7 +31,7 @@ generate_contrast_data_structure <- function(peak_matrix, clustering_vector)
     for(ion in 1:number_of_ions)
     {
       all_clusters_contrast_matrix[clusA,ion] <- mean(intensity_matrix[which(clustering == clusA), ion])/
-                                        mean(intensity_matrix[,ion])
+                                        mean(intensity_matrix[-which(clustering == clusA),ion])
     }
   }
   
@@ -97,37 +97,111 @@ order_by_contrast <- function(list, name, contrast_data, pair = T)
 
 order_results_by_contrast <- function(results, peak_matrix, clustering_vector)
 {
+  # ordering ions from Volcano by contast
   contrast_data <- generate_contrast_data_structure(peak_matrix, clustering_vector)
+  lists_to_remove <- c()
   for(list_name in names(results$ionsFromVolcano))
   {
     if(length(strsplit(list_name, split = " vs ")[[1]]) == 2 && dim(results$ionsFromVolcano[[list_name]])[2] != 1)  
     {
       results$ionsFromVolcano[[list_name]] <- order_by_contrast(results$ionsFromVolcano[[list_name]], list_name, contrast_data, T)
     }
-    
-    if(length(strsplit(list_name, split = " vs ")[[1]]) == length(unique(clustering_vector)) && dim(results$ionsFromVolcano[[list_name]])[2] != 1)  
+    else
     {
-      results$ionsFromVolcano[[list_name]] <- order_by_contrast(results$ionsFromVolcano[[list_name]], list_name, contrast_data, F)
+      if(length(strsplit(list_name, split = " vs ")[[1]]) == length(unique(clustering_vector)) && dim(results$ionsFromVolcano[[list_name]])[2] != 1)  
+      {
+        results$ionsFromVolcano[[list_name]] <- order_by_contrast(results$ionsFromVolcano[[list_name]], list_name, contrast_data, F)
+      }
+      else
+      {
+        lists_to_remove <- c(lists_to_remove,list_name)
+      }
     }
   }
   
+  list_indexes <- c()
+  for(name in lists_to_remove)
+  {
+    list_indexes <- c( list_indexes, which(names(results$ionsFromVolcano) == name))
+  }
+  
+  tmp_list <- list()
+  cnt <- 1
+  old_names <- c()
+  for(l in 1:length(results$ionsFromVolcano))
+  {
+    if(!any(list_indexes==l))
+    {
+      old_names <- c(old_names,names(results$ionsFromVolcano)[l])
+      tmp_list[[cnt]] <- results$ionsFromVolcano[[l]]
+      cnt <- cnt + 1
+    }
+  }
+  names(tmp_list) <- old_names
+  results$ionsFromVolcano <- tmp_list
+ 
+  # ordering ions from Zeros by contast  
+  lists_to_remove <- c()
   for(list_name in names(results$ionsFromZeros))
   {
     if(length(strsplit(list_name, split = " vs ")[[1]]) == 2 && dim(results$ionsFromZeros[[list_name]])[2] != 1)  
     {
       results$ionsFromZeros[[list_name]] <- order_by_contrast(results$ionsFromZeros[[list_name]], list_name, contrast_data, T)
     }
-    
-    if(length(strsplit(list_name, split = " vs ")[[1]]) == length(unique(clustering_vector)) && dim(results$ionsFromZeros[[list_name]])[2] != 1)  
+    else
     {
-      results$ionsFromZeros[[list_name]] <- order_by_contrast(results$ionsFromZeros[[list_name]], list_name, contrast_data, F)
+      if(length(strsplit(list_name, split = " vs ")[[1]]) == length(unique(clustering_vector)) && dim(results$ionsFromZeros[[list_name]])[2] != 1)  
+      {
+        results$ionsFromZeros[[list_name]] <- order_by_contrast(results$ionsFromZeros[[list_name]], list_name, contrast_data, F)
+      }
+      else
+      {
+        lists_to_remove <- c(lists_to_remove,list_name)
+      }
+    }
+  }
+  
+  list_indexes <- c()
+  for(name in lists_to_remove)
+  {
+    list_indexes <- c( list_indexes, which(names(results$ionsFromZeros) == name))
+  }
+  
+  tmp_list <- list()
+  cnt <- 1
+  old_names <- c()
+  for(l in 1:length(results$ionsFromZeros))
+  {
+    if(!any(list_indexes==l))
+    {
+      old_names <- c(old_names,names(results$ionsFromZeros)[l])
+      tmp_list[[cnt]] <- results$ionsFromZeros[[l]]
+      cnt <- cnt + 1
+    }
+  }
+  names(tmp_list) <- old_names
+  results$ionsFromZeros <- tmp_list
+  
+  #Cleaning up matrixes
+  for(big_list in 1:2)
+  {
+    for(sub_list in 1:(length(results[[big_list]])-1))
+    {
+      noisy_ions <-c()
+      for(ion in 1:nrow(results[[big_list]][[sub_list]]))
+      {
+       if(results[[big_list]][[sub_list]][ion,1] == results[[big_list]][[sub_list]][ion,2])
+       {
+         noisy_ions <- c(noisy_ions, ion)
+       }
+      }
+      if(!is.null(noisy_ions))
+      {
+        results[[big_list]][[sub_list]] <- results[[big_list]][[sub_list]][-noisy_ions, ]
+      }
     }
   }
   
   return(results)
 }
-
-# list_name <- names(results$ionsFromVolcano)[1]
-# results <- r
-# results <- order_results_by_contrast(results, peak_matrix, clustering_vector)
 

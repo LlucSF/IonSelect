@@ -7,12 +7,14 @@
 using namespace Rcpp;
 
 // IonSelectC
-List IonSelectC(double m_focalProb, int numPixels, NumericVector SP_Pixels, int numCols, NumericVector massAxis, int numSamples, int nPTestGroups, NumericVector R_pTestGroups, NumericVector ClustersSize, List ClustersPixels, NumericMatrix data, double zeroThreshold);
-RcppExport SEXP _IonSelect_IonSelectC(SEXP m_focalProbSEXP, SEXP numPixelsSEXP, SEXP SP_PixelsSEXP, SEXP numColsSEXP, SEXP massAxisSEXP, SEXP numSamplesSEXP, SEXP nPTestGroupsSEXP, SEXP R_pTestGroupsSEXP, SEXP ClustersSizeSEXP, SEXP ClustersPixelsSEXP, SEXP dataSEXP, SEXP zeroThresholdSEXP) {
+List IonSelectC(double zPercentil, double pPercentil, double fcPercentil, int numPixels, NumericVector SP_Pixels, int numCols, NumericVector massAxis, int numSamples, int nPTestGroups, NumericVector R_pTestGroups, NumericVector ClustersSize, List ClustersPixels, NumericMatrix data, double zeroThreshold);
+RcppExport SEXP _IonSelect_IonSelectC(SEXP zPercentilSEXP, SEXP pPercentilSEXP, SEXP fcPercentilSEXP, SEXP numPixelsSEXP, SEXP SP_PixelsSEXP, SEXP numColsSEXP, SEXP massAxisSEXP, SEXP numSamplesSEXP, SEXP nPTestGroupsSEXP, SEXP R_pTestGroupsSEXP, SEXP ClustersSizeSEXP, SEXP ClustersPixelsSEXP, SEXP dataSEXP, SEXP zeroThresholdSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type m_focalProb(m_focalProbSEXP);
+    Rcpp::traits::input_parameter< double >::type zPercentil(zPercentilSEXP);
+    Rcpp::traits::input_parameter< double >::type pPercentil(pPercentilSEXP);
+    Rcpp::traits::input_parameter< double >::type fcPercentil(fcPercentilSEXP);
     Rcpp::traits::input_parameter< int >::type numPixels(numPixelsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type SP_Pixels(SP_PixelsSEXP);
     Rcpp::traits::input_parameter< int >::type numCols(numColsSEXP);
@@ -24,13 +26,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type ClustersPixels(ClustersPixelsSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type data(dataSEXP);
     Rcpp::traits::input_parameter< double >::type zeroThreshold(zeroThresholdSEXP);
-    rcpp_result_gen = Rcpp::wrap(IonSelectC(m_focalProb, numPixels, SP_Pixels, numCols, massAxis, numSamples, nPTestGroups, R_pTestGroups, ClustersSize, ClustersPixels, data, zeroThreshold));
+    rcpp_result_gen = Rcpp::wrap(IonSelectC(zPercentil, pPercentil, fcPercentil, numPixels, SP_Pixels, numCols, massAxis, numSamples, nPTestGroups, R_pTestGroups, ClustersSize, ClustersPixels, data, zeroThreshold));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_IonSelect_IonSelectC", (DL_FUNC) &_IonSelect_IonSelectC, 12},
+    {"_IonSelect_IonSelectC", (DL_FUNC) &_IonSelect_IonSelectC, 14},
     {NULL, NULL, 0}
 };
 

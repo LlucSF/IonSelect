@@ -179,7 +179,7 @@ int col=0;
 int IonsSelect::setBoundaries(double percentil)
   {
   m_zProb=percentil/100.0;
-  m_pProb=sqrt(m_zProb); //se ajusta la prob de FC y P para que su producto coincida con el dado (que se asigna a Z)
+  m_pProb=std::sqrt(m_zProb); //se ajusta la prob de FC y P para que su producto coincida con el dado (que se asigna a Z)
   m_fcProb=m_pProb;
   setZPFcBoundaries();
   return 0;

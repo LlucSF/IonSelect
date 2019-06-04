@@ -30,7 +30,7 @@
 #' @export
 #'
 
-TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,clusterSubset = sort(unique(clusters)))
+TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = c(1,10,10),clusterSubset = sort(unique(clusters)))
 {
   ### Imput check and format ###
   clusterSubset <- sort(clusterSubset)
@@ -72,16 +72,16 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,c
 
   
   ### C call ###
-  Test <- IonSelectC(   m_focalProb = percentile, 
+  Test <- IonSelectC(   zPercentil = percentile[1], 
+                        pPercentil = percentile[2], 
+                        fcPercentil = percentile[3], 
                           numPixels = sum(PeakMtx$numPixels),
                           SP_Pixels = c(PeakMtx$numPixels),
                          # numPixels = nrow(intensityData), 
                          # SP_Pixels = nrow(intensityData),                    
                             numCols = length(PeakMtx$mass),
                            massAxis = PeakMtx$mass, 
-                        # numSamples = nrow(PeakMtx$intensity),
-                        # numSamples = nrow(intensityData),
-                        numSamples = 1,
+                        numSamples = length(PeakMtx$numPixels),
                        nPTestGroups = length(clusterSubset), 
                       R_pTestGroups = (1:length(clusterSubset))-1,
                        ClustersSize = size_clusters, 
@@ -105,7 +105,6 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,c
   cname <- c()          #names of the columns
   
   
-  
   #Discard data from the comparation between same clusters and naming the lists 
   for(j in 1:(2^length(clusterSubset)))
   {
@@ -118,8 +117,8 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,c
         cluster_indexes <- which(intToBits(j-1)==1)
         if(length(cluster_indexes) >= 2)
         {
-          cname <- paste("Clus_", sort(clusterSubset[cluster_indexes], decreasing = T),sep = "")
-          lname <- c(lname,paste("Clus_", sort(clusterSubset[cluster_indexes], decreasing = T), sep = "", collapse = " vs "))
+          cname <- paste("Clus_", sort(clusterSubset[cluster_indexes], decreasing = F),sep = "")
+          lname <- c(lname,paste("Clus_", sort(clusterSubset[cluster_indexes], decreasing = F), sep = "", collapse = " vs "))
           colnames(Test[[1]][[j]]) <- cname
           colnames(Test[[2]][[j]]) <- cname
         }
@@ -131,15 +130,15 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,c
   names(Test[[2]]) <- lname
   
 
-  a <- rep(paste("Clus_",clusterSubset, " vs",sep = ""),each = length(clusterSubset))
-  b <- rep(paste("Clus_",clusterSubset,sep = ""),times = length(clusterSubset))
+  a <- rep(paste("Clus_",clusterSubset, " vs",sep = ""),times = length(clusterSubset))
+  b <- rep(paste("Clus_",clusterSubset,sep = ""),each = length(clusterSubset))
   ionname <- paste(a,b)
   for(i in 1:length(clusterSubset)^2)
   {
     IonsData[[i]] <- as.data.frame(Test[[3]][ ,((3*i-2):(3*i))])
     IonsData[[i]] <- cbind(IonsData[[i]], as.character(format(PeakMtx$mass, nsmall = 3, digits = 3)))
     IonsData[[i]] <- cbind(IonsData[[i]], as.character(format(1:length(PeakMtx$mass), nsmall = 3, digits = 3)))
-    colnames(IonsData[[i]]) <- c("Zero","p value","FC","Ion","Index") 
+    colnames(IonsData[[i]]) <- c("Zero", "p value", "FC", "Ion", "Index") 
   }
   names(IonsData) <- ionname
   sameClusterData <- which(unlist(lapply(lapply((strsplit(ionname,split = " vs ")), unique),length))==1)
@@ -163,12 +162,12 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,c
       {
         for(k in 1:(dim(Test[[h]][[i]])[2]-1))
         {
-          if((Test[[h]][[i]][j,k] == 3) | (Test[[h]][[i]][j,k] == 4))
+          if((Test[[h]][[i]][j,k] == 3) | (Test[[h]][[i]][j,k] == 2))
           {
             Test[[h]][[i]][j,k] <- "DownRegulated"
           }
 
-          if((Test[[h]][[i]][j,k] == 1) | (Test[[h]][[i]][j,k] == 2))
+          if((Test[[h]][[i]][j,k] == 1) | (Test[[h]][[i]][j,k] == 4))
           {
             Test[[h]][[i]][j,k] <- "UpRegulated"
           }
@@ -195,7 +194,7 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,c
         }
           else
           {
-            Test[[h]][[i]] <- as.data.frame(Test[[h]][[i]][-emptyRows,])
+            Test[[h]][[i]] <- as.data.frame(Test[[h]][[i]][-emptyRows,],make.names = F)
           }
       }
     }
@@ -209,11 +208,9 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = 1,c
       }
     }
   }
-  
-  
-  # Contrast parameter
 
-  Test <- order_results_by_contrast(Test, PeakMtx, clusterSubset)
+  # Contrast parameter
+  Test <- order_results_by_contrast(Test, PeakMtx, clusters)
   
   #Output throw 
   return(Test)
