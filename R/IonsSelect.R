@@ -209,10 +209,10 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = c(1
     }
   }
 
-  # Contrast parameter
+  # Contrast parameter & clean up
   Test <- order_results_by_contrast(Test, PeakMtx, clusters)
-  
-  #Output throw 
+  Test <- merge_and_reorder_results(Test, PeakMtx, clusters)
+
   return(Test)
 }
 
@@ -220,30 +220,15 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = c(1
 #'
 #' @description Plots the data related to the selected ions from the comparasion between the given clusters. 
 #'
-#' @param testResults An rMSIprocPeakMatrix object. 
+#' @param testResults The results of the test. 
 #' @param clusterIndex Numeric Vector. A vector containing the cluster index for each pixel coded in numbers from 1 to number of clusters.
-#' @param source String. Z for data from the zeros test, P&FC for data from the p & fc test.
+#' @param max_ions Numeric. Maximum nunber of ions to be displayed.
 #' @export
 #'
 
-plotIonDatabyComparedClusters <- function(testResults, clusterIndex, source)
+plotIonDatabyComparedClusters <- function(testResults, clusterIndex, max_ions)
 {
-  df_name <- ""
-  if(source == "Z")
-  {
-    df_name = "ionsFromZeros" 
-  } else
-    {
-      if(source == "P&FC")
-      {
-        df_name = "ionsFromVolcano" 
-      } else
-        {
-          return(writeLines("Wrong source! Must be Z or P&FC"))
-        }
-    }
- 
-  clusterIndex <- sort(clusterIndex,decreasing = T)
+  clusterIndex <- sort(clusterIndex,decreasing = F)
   name <- ""
   for(i in 1:length(clusterIndex))
   {
@@ -256,30 +241,58 @@ plotIonDatabyComparedClusters <- function(testResults, clusterIndex, source)
       }
   }
   
-  if(any(names(testResults[[df_name]]) == name))
+ 
+  if(any(names(testResults$ions) == name))
   {
-    df <- testResults$ionsData[[name]]
-    colnames(df) <- c("Z","p","FC","ion","index")
+    ion_rows <- as.numeric(as.character(testResults$ions[[name]]$Index))
+    df <- testResults$data[[name]][ion_rows, ]
+    df$Contrast <- testResults$ions[[name]]$Contrast
+    df$Source <- testResults$ions[[name]]$Source
+    colnames(df) <- c("Z","p","FC","Ion","Index","Contrast","Source")
+    if(nrow(df)>=max_ions)
+    {
+      df <- df[1:max_ions,]
+    }
   } else
     {
       writeLines(paste("Wrong list index. List",name,"is not avaliable. Only the following are allowed: \n"))
       return(print(names(testResults[[df_name]])))
     }
   
-  if(source == "Z")
-  {
-    g <- ggplot2::ggplot(data = df[as.integer(levels(testResults[[df_name]][[name]]$Index)),]) + ggplot2::geom_col(mapping = ggplot2::aes(x = ion, y = Z)) +
-      ggplot2::scale_fill_continuous(type = "viridis") +
-      ggplot2::theme_bw() + ggplot2::labs(y = "zero score",x = "m/z", title = paste(name,"zero test")) +
-      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = -60, hjust = 0)) 
-  } else
-    {
-      g <- ggplot2::ggplot(data = df[as.integer(levels(testResults[[df_name]][[name]]$Index)),]) + ggplot2::geom_col(mapping = ggplot2::aes(x = ion, y = log2(FC), fill = -log(p, base = 10))) +
-        ggplot2::scale_fill_continuous(type = "viridis") +
-        ggplot2::theme_bw() + ggplot2::labs(y = "log2(Fold Change)",x = "m/z", fill = "-log10(p)", title = paste(name,"FC and p test")) +
-        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = -60, hjust = 0)) 
-    }
+    options(warn = -1)
+  
+    df$Ion <- as.character(df$Ion)
+    labs <- factor(1:length(df$Ion), labels = df$Ion)
+    df$Ion <- as.numeric(labs)
+
+    g <- ggplot2::ggplot(#*data = df, mapping = ggplot2::aes(x = Ion)#
+      ) +
+         ggplot2::geom_col(data = subset(df, df$Source == "volcano"),
+                           mapping = ggplot2::aes(y = -log2(FC),
+                                                  fill = -log10(p),
+                                                  x = df$Ion[df$Source =="volcano"],
+                                                  colour = Source
+                                                  )
+                          ) +
+      ggplot2::geom_col(data = subset(df, df$Source == "zero"),
+                        mapping = ggplot2::aes(y = log2(Z),
+                                               colour = Source,
+                                               x = df$Ion[df$Source =="zero"]
+                                               ),
+                        fill = "white"
+                        ) +
+      ggplot2::labs(y = "log2(Fold Change)",
+                    x = "m/z",
+                    fill = "-log10(p)",
+                    title = name) +
+      ggplot2::scale_y_continuous(sec.axis = ggplot2::sec_axis(~.*1, name = "log2(Zero score)")) +
+      ggplot2::scale_fill_continuous(type = "viridis") + scale_colour_manual(values = c("blue","red")) +
+      ggplot2::theme_bw() +
+      ggplot2::guides(colour = guide_legend(override.aes=list(shape=21))) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = -60, hjust = 0)) + 
+      ggplot2::scale_x_discrete(breaks = 1:max_ions, labels = as.character(labs),position = "bottom", drop = T)
   print(g)
+  options(warn = 0)
 }
 
 

@@ -31,7 +31,7 @@ generate_contrast_data_structure <- function(peak_matrix, clustering_vector)
     for(ion in 1:number_of_ions)
     {
       all_clusters_contrast_matrix[clusA,ion] <- mean(intensity_matrix[which(clustering == clusA), ion])/
-                                        mean(intensity_matrix[-which(clustering == clusA),ion])
+                                        mean(intensity_matrix[,ion])
     }
   }
   
@@ -69,7 +69,7 @@ get_indexes_from_name <- function(name)
 
 order_by_contrast <- function(list, name, contrast_data, pair = T)
 {
-  list_indexes <- list$Index
+  list_indexes <- as.numeric(as.character(list$Index))
 
   if(pair)
   {
@@ -90,7 +90,7 @@ order_by_contrast <- function(list, name, contrast_data, pair = T)
     }
   
   list <- list[contrast_order,]
-  list$contrast <- contrast_values[contrast_order]
+  list$Contrast <- contrast_values[contrast_order]
   return(list)
 }
 
@@ -190,7 +190,7 @@ order_results_by_contrast <- function(results, peak_matrix, clustering_vector)
       noisy_ions <-c()
       for(ion in 1:nrow(results[[big_list]][[sub_list]]))
       {
-       if(results[[big_list]][[sub_list]][ion,1] == results[[big_list]][[sub_list]][ion,2])
+       if(as.character(results[[big_list]][[sub_list]][ion,1]) == as.character(results[[big_list]][[sub_list]][ion,2]))
        {
          noisy_ions <- c(noisy_ions, ion)
        }
@@ -204,4 +204,77 @@ order_results_by_contrast <- function(results, peak_matrix, clustering_vector)
   
   return(results)
 }
+
+
+
+merge_and_reorder_results <- function(results, peak_matrix, clustering_vector)
+{
+  # New list to store the results
+  merged_list <- list()
+  new_results <- list()
+  
+  # Vector with all the list names
+  name_list <- unique(names(results$ionsFromVolcano),
+                      names(results$ionsFromZeros)
+                      )
+  last_name <- name_list[length(name_list)]
+  
+  # For each cluster comparasion
+  for(name in name_list)
+  {
+    flag_V <- any(names(results$ionsFromVolcano) == name) # Exists a list with that name in the volcano?
+    flag_Z <- any(names(results$ionsFromZeros) == name) # Exists a list with that name in the zeros?
+    results$ionsFromVolcano[[name]]$Source <- rep("volcano", times = nrow(results$ionsFromVolcano[[name]]))
+    results$ionsFromZeros[[name]]$Source <- rep("zero", times = nrow(results$ionsFromZeros[[name]]))
+    
+    if(flag_V & flag_Z)
+    {
+      merged_list[[name]] <- rbind(results$ionsFromVolcano[[name]],results$ionsFromZeros[[name]])
+    }
+    
+    if(flag_V & !flag_Z)
+    {
+      merged_list[[name]] <- results$ionsFromVolcano[[name]]
+    }
+    
+    if(!flag_V & flag_Z)
+    {
+      merged_list[[name]] <- results$ionsFromZeros[[name]]
+    }
+    
+    # Reordering the new list.
+    if(name != last_name)
+    {
+      for(row in 1:nrow(merged_list[[name]]))
+      {
+        if(merged_list[[name]][row,1] == "DownRegulated")
+        {
+          merged_list[[name]]$Contrast[row] <- 1/merged_list[[name]]$Contrast[row]
+        }
+      }
+    } else
+      {
+        for(row in 1:nrow(merged_list[[name]]))
+        {
+          if(any(merged_list[[name]][row,] == "DownRegulated"))
+          {
+            merged_list[[name]]$Contrast[row] <- 1/merged_list[[name]]$Contrast[row]
+          }
+        }
+      }
+
+    merged_list[[name]] <- merged_list[[name]][order(merged_list[[name]]$Contrast,decreasing = T),]
+    rownames(merged_list[[name]]) <- c()
+  }
+  
+  
+  
+  new_results$ions <- merged_list 
+  new_results$data <- results$ionsData
+  return(new_results)
+}
+
+
+
+
 
