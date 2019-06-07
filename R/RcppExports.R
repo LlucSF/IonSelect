@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 IonSelectC <- function(zPercentil, pPercentil, fcPercentil, numPixels, SP_Pixels, numCols, massAxis, numSamples, nPTestGroups, R_pTestGroups, ClustersSize, ClustersPixels, data, zeroThreshold) {
-    .Call('_IonSelect_IonSelectC', PACKAGE = 'IonSelect', zPercentil, pPercentil, fcPercentil, numPixels, SP_Pixels, numCols, massAxis, numSamples, nPTestGroups, R_pTestGroups, ClustersSize, ClustersPixels, data, zeroThreshold)
+    .Call('_rMSIKeyIon_IonSelectC', PACKAGE = 'rMSIKeyIon', zPercentil, pPercentil, fcPercentil, numPixels, SP_Pixels, numCols, massAxis, numSamples, nPTestGroups, R_pTestGroups, ClustersSize, ClustersPixels, data, zeroThreshold)
 }
 

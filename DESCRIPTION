@@ -1,4 +1,4 @@
-Package: IonSelect
+Package: rMSIKeyIon
 Type: Package
 Title: Ions selection tool for MSI datasaets
 Version: 0.1.0
