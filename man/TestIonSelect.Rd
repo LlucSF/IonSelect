@@ -4,17 +4,23 @@
 \alias{TestIonSelect}
 \title{TestIonSelect}
 \usage{
-TestIonSelect(PeakMtx, clusters, clusterSubset = unique(clusters),
-  probability = 0.05)
+TestIonSelect(PeakMtx, clusters, zeroThreshold = 0, percentile = c(1,
+  10, 10), clusterSubset = sort(unique(clusters)))
 }
 \arguments{
-\item{PeakMtx}{An rMSIprocPeakMatrix object.}
+\item{PeakMtx}{List. An rMSIprocPeakMatrix. Must contain at least the following categories: \itemize{
+\item PeakMtx$intensity. A matrix containg the intensities of the peaks for each pixel (rows = pixels, cols = ions).  
+\item PeakMtx$mass. A vector containg the masses of each peak. Must be in the same order with the columns of the intensity marix.   
+\item PeakMtx$numPixels. Number of pixels (rows in your matrix).   
+}}
 
 \item{clusters}{Numeric Vector. A vector containing the cluster index for each pixel coded in numbers from 1 to number of clusters.}
 
+\item{zeroThreshold}{Numeric. Intensity value below which an ion is considered a null ion in a pixel.}
+
 \item{clusterSubset}{Numeric vector containing the index of the clusters which will be avaluated.}
 
-\item{probability}{Double. Probability restriction of the test. More information on the paper.}
+\item{precentile}{Numeric Vector. Percentile restriction of the test for each measure (null ion concentration,p-value, fold change).}
 }
 \value{
 List containing three elements. The results from the Volcano test, the results from the Zero test and the values of p, FC & Zero scores.

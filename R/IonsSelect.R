@@ -21,11 +21,15 @@
 #' @description Performs a test that calculates and select the up-regulated and/or down-regulated
 #' ions from a peak matrix between defernt clusters.
 #'
-#' @param PeakMtx An rMSIprocPeakMatrix object. 
+#' @param PeakMtx List. An rMSIprocPeakMatrix. Must contain at least the following categories: \itemize{
+#' \item PeakMtx$intensity. A matrix containg the intensities of the peaks for each pixel (rows = pixels, cols = ions).  
+#' \item PeakMtx$mass. A vector containg the masses of each peak. Must be in the same order with the columns of the intensity marix.   
+#' \item PeakMtx$numPixels. Number of pixels (rows in your matrix).   
+#' }
 #' @param clusters Numeric Vector. A vector containing the cluster index for each pixel coded in numbers from 1 to number of clusters.
 #' @param clusterSubset Numeric vector containing the index of the clusters which will be avaluated.
-#' @param precentile Numeric. Percentile restriction of the test. More information on the paper.
-#' @param zeroThreshold Numeric. Intensity value below which an ion is considered a zero.
+#' @param precentile Numeric Vector. Percentile restriction of the test for each measure (null ion concentration,p-value, fold change). 
+#' @param zeroThreshold Numeric. Intensity value below which an ion is considered a null ion in a pixel.
 #' @return List containing three elements. The results from the Volcano test, the results from the Zero test and the values of p, FC & Zero scores. 
 #' @export
 #'
@@ -223,7 +227,7 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = c(1
 #' @param testResults The results of the test. 
 #' @param clusterIndex Numeric Vector. A vector containing the cluster index for each pixel coded in numbers from 1 to number of clusters.
 #' @param max_ions Numeric. Maximum nunber of ions to be displayed.
-#' @export
+#' 
 #'
 
 plotIonDatabyComparedClusters <- function(testResults, clusterIndex, max_ions)

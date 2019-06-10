@@ -185,19 +185,28 @@ order_results_by_contrast <- function(results, peak_matrix, clustering_vector)
   #Cleaning up matrixes
   for(big_list in 1:2)
   {
-    for(sub_list in 1:(length(results[[big_list]])-1))
+    sub_list_end <- (length(results[[big_list]])-1)
+    if(sub_list_end == 0)
     {
-      noisy_ions <-c()
-      for(ion in 1:nrow(results[[big_list]][[sub_list]]))
+      sub_list_end == 1
+    }
+    
+    if(sub_list_end > 0)
+    {
+      for(sub_list in 1:(length(results[[big_list]])-1))
       {
-       if(as.character(results[[big_list]][[sub_list]][ion,1]) == as.character(results[[big_list]][[sub_list]][ion,2]))
-       {
-         noisy_ions <- c(noisy_ions, ion)
-       }
-      }
-      if(!is.null(noisy_ions))
-      {
-        results[[big_list]][[sub_list]] <- results[[big_list]][[sub_list]][-noisy_ions, ]
+        noisy_ions <-c()
+        for(ion in 1:nrow(results[[big_list]][[sub_list]]))
+        {
+         if(as.character(results[[big_list]][[sub_list]][ion,1]) == as.character(results[[big_list]][[sub_list]][ion,2]))
+         {
+           noisy_ions <- c(noisy_ions, ion)
+         }
+        }
+        if(!is.null(noisy_ions))
+        {
+          results[[big_list]][[sub_list]] <- results[[big_list]][[sub_list]][-noisy_ions, ]
+        }
       }
     }
   }
@@ -212,6 +221,8 @@ merge_and_reorder_results <- function(results, peak_matrix, clustering_vector)
   # New list to store the results
   merged_list <- list()
   new_results <- list()
+  len_volcano <- length(names(results$ionsFromVolcano))
+  len_zero <- length(names(results$ionsFromZeros))
   
   # Vector with all the list names
   name_list <- unique(names(results$ionsFromVolcano),
@@ -224,8 +235,15 @@ merge_and_reorder_results <- function(results, peak_matrix, clustering_vector)
   {
     flag_V <- any(names(results$ionsFromVolcano) == name) # Exists a list with that name in the volcano?
     flag_Z <- any(names(results$ionsFromZeros) == name) # Exists a list with that name in the zeros?
-    results$ionsFromVolcano[[name]]$Source <- rep("volcano", times = nrow(results$ionsFromVolcano[[name]]))
-    results$ionsFromZeros[[name]]$Source <- rep("zero", times = nrow(results$ionsFromZeros[[name]]))
+    if(len_zero > 0 & flag_Z)
+    {
+      results$ionsFromZeros[[name]]$Source <- rep("zero", times = nrow(results$ionsFromZeros[[name]]))
+    }
+
+    if(len_volcano > 0 & flag_V)
+    {
+      results$ionsFromVolcano[[name]]$Source <- rep("volcano", times = nrow(results$ionsFromVolcano[[name]]))
+    }
     
     if(flag_V & flag_Z)
     {
