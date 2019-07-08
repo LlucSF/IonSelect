@@ -69,12 +69,13 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = c(1
   min <- 0
   for(i in 1:length(ID_clusters))
   {
-    intensityData[(min+1):(length(ID_clusters[[i]])+min),] <- PeakMtx$intensity[ID_clusters[[i]],]
-    ID_clusters[[i]] <- (min+1):(length(ID_clusters[[i]])+min)
-    min <- length(ID_clusters[[i]])
+    pixel_range <- (min + 1):(length(ID_clusters[[i]]) + min)
+    intensityData[pixel_range,] <- PeakMtx$intensity[ID_clusters[[i]],]
+    ID_clusters[[i]] <- pixel_range - 1
+    min <- min + length(ID_clusters[[i]])
   }
 
-  
+
   ### C call ###
   Test <- IonSelectC(   zPercentil = percentile[1], 
                         pPercentil = percentile[2], 
@@ -93,8 +94,7 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = c(1
                                data = intensityData,
                       zeroThreshold = zeroThreshold
                      )
- 
- 
+  
 
   ### Output format ###
   #dummy variables
