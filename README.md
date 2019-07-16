@@ -19,7 +19,7 @@ devtools::install_github("prafols/rMSI", ref = "0.8")
 devtools::install_github("prafols/rMSIproc", ref = "0.2")
 ```
 
-2. Install the following packages and libraries.This package requires the GSL library. If you are using windows, you can obtain more information on how to install it below. Also you need to install the following packages to link C++ code to R.  
+2.Install the following packages and libraries.This package requires the GSL library. If you are using windows, you can obtain more information on how to install it below. Also you need to install the following packages to link C++ code to R.  
 ```
   install.packages("Rcpp")
   install.packages("RcppGSL")
