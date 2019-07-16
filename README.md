@@ -1,4 +1,4 @@
-### rMSIKeyIon
+# rMSIKeyIon
 R package for selecting statistically informative ions between clusters in MSI datasets. It uses the classical p value and FC method and introduces a new the null value concentration parameter.
 
 
@@ -32,7 +32,7 @@ Finally, install the rMSIKeyIon package.
 ```
   devtools::install_github("LlucSF/rMSIKeyIon")
 ```
-# GSL for windows
+### GSL for windows
 This package requires the GSL library. Windows machines should download a compiled version of it. 
 In the following link you can find information about installing it and a download repository. http://joonro.github.io/blog/posts/installing-gsl-and-cythongsl-in-windows.html#
 
