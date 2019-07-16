@@ -8,21 +8,18 @@ In order to install and proced with the test you have two options: Install all t
 or just load the data (using the base R methods) included in the .Rdata files in the test folder (just step 2). 
 Also, if you want to check the paper's results, you can just load the output of the package without installing it from results.Rdata.
 
-1.Install the rMSI & rMSIproc R packages from GitHub.This will allow you to visualize ions and
-clusters easily. To install packages from GitHub you first need the devtools package.
+1.Install the rMSI & rMSIproc R packages from GitHub.This will allow you to visualize ions and clusters easily. To install packages from GitHub you first need the devtools package.
 ```
 install.packages("devtools")
 ```
 
-Now install rMSI & rMSIproc packages. Its recomended to follow the instructions of each package,
-repository but running the following lines should work in most cases.
+Now install rMSI & rMSIproc packages. Its recomended to follow the instructions of each package, repository but running the following lines should work in most cases.
 ```
 devtools::install_github("prafols/rMSI", ref = "0.8")
 devtools::install_github("prafols/rMSIproc", ref = "0.2")
 ```
 
-2.  Install the following packages and libraries:
-This package requires the GSL library. If you are using windows, you can obtain more information on how to install it below. Also you need to install the following packages to link C++ code to R.  
+2. Install the following packages and libraries.This package requires the GSL library. If you are using windows, you can obtain more information on how to install it below. Also you need to install the following packages to link C++ code to R.  
 ```
   install.packages("Rcpp")
   install.packages("RcppGSL")
