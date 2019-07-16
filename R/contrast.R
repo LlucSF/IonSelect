@@ -74,8 +74,8 @@ order_by_contrast <- function(list, name, contrast_data, pair = T)
   if(pair)
   {
     clusters <- get_indexes_from_name(name)
-    #contrast_values <- contrast_data$cube[clusters[1],clusters[2],list_indexes]
-    contrast_values <- contrast_data$all[clusters[1],list_indexes]
+    contrast_values <- contrast_data$cube[clusters[1],clusters[2],list_indexes]
+    #contrast_values <- contrast_data$all[clusters[1],list_indexes]
     contrast_order <- order(contrast_values, decreasing = T)
   }
     else
@@ -226,8 +226,8 @@ merge_and_reorder_results <- function(results, peak_matrix, clustering_vector)
   len_zero <- length(names(results$ionsFromZeros))
   
   # Vector with all the list names
-  name_list <- unique(names(results$ionsFromVolcano),
-                      names(results$ionsFromZeros)
+  name_list <- unique(c(names(results$ionsFromVolcano),
+                      names(results$ionsFromZeros))
                       )
   last_name <- name_list[length(name_list)]
   
