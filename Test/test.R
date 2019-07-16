@@ -91,8 +91,8 @@ rMSIproc::plotPeakImage(peakMatrix = peak_matrix, column = 123)
 # Time to run the algorithm
 results <- rMSIKeyIon::TestIonSelect(PeakMtx = peak_matrix,
                                     clusters = clustering_vector,
-                                    percentile = c(8,10,10),
-                                    zeroThreshold = 1e-3)
+                                    percentile = c(1,10,10),
+                                    zeroThreshold = 2.5e-4)
 # The output is a list of two lists. The first one, called "ions" contains the up/down-regulated ions
 # found at each comparison. The second one, called "data" contains all the data for each ion at each
 # comparison. 
