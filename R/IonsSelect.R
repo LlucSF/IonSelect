@@ -94,8 +94,7 @@ TestIonSelect <- function(PeakMtx, clusters, zeroThreshold = 0, percentile = c(1
                                data = intensityData,
                       zeroThreshold = zeroThreshold
                      )
-  
-
+   
   ### Output format ###
   #dummy variables
   d <- NULL             

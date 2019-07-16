@@ -74,7 +74,8 @@ order_by_contrast <- function(list, name, contrast_data, pair = T)
   if(pair)
   {
     clusters <- get_indexes_from_name(name)
-    contrast_values <- contrast_data$cube[clusters[1],clusters[2],list_indexes]
+    #contrast_values <- contrast_data$cube[clusters[1],clusters[2],list_indexes]
+    contrast_values <- contrast_data$all[clusters[1],list_indexes]
     contrast_order <- order(contrast_values, decreasing = T)
   }
     else

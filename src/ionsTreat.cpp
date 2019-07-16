@@ -301,14 +301,20 @@ double IonsTreat::getFoldChange(float *dataA_f, float* dataB_f, int sizeA, int s
   else if(fabs(medianB)<EPSILON_D && medianB>0) medianB=EPSILON_D;
 
   fc=medianA/medianB;
-  if(isnan(fc)) 
-    //printf("%e %e %d %d\n", medianA, medianB, sizeA2, sizeB2);
-  if(fc>=9.9999 && signo>0) 
-    fc=9.9999;
-  else if(fc>=9.9999 && signo<0) 
-    fc=9.9990;
-  else if(fc<0.1) fc=0.1;
   
+  if(fc>=9.9999 && signo>0) 
+  {
+    fc=9.9999;
+  }
+  else if(fc>=9.9999 && signo<0) 
+    {
+      fc=9.9999;
+    }
+  else if(fc<0.1) 
+    {
+      fc=0.1;
+    }
+
   return (float)(fc*signo);
   }
 
@@ -354,13 +360,20 @@ double IonsTreat::getFoldChange(double *dataA, double* dataB, int sizeA, int siz
   else if(fabs(medianB)<EPSILON_LD && medianB>0) medianB=EPSILON_LD;
 
   fc=medianA/medianB;
-  if(isnan(fc)) 
-    //printf("%e %e %d %d\n", medianA, medianB, sizeA2, sizeB2);
+  
   if(fc>=9.9999 && signo>0) 
+  {
     fc=9.9999;
+  }
   else if(fc>=9.9999 && signo<0) 
-    fc=9.9990;
-  else if(fc<0.1) fc=0.1;
+    {
+      fc=9.9999;
+    }
+  else if(fc<0.1) 
+    {
+      fc=0.1;
+    }
+  
   
   return (float)(fc*signo);
 }
