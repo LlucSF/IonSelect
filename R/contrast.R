@@ -115,7 +115,14 @@ order_results_by_contrast <- function(results, peak_matrix, clustering_vector)
       }
       else
       {
-        lists_to_remove <- c(lists_to_remove,list_name)
+        if(nrow(results$ionsFromVolcano[[list_name]])==4 & ncol(results$ionsFromVolcano[[list_name]])==1)
+        {
+          results$ionsFromVolcano[[list_name]] <- repair_list(results$ionsFromVolcano[[list_name]],list_name, contrast_data)
+        }
+        else
+        {
+          lists_to_remove <- c(lists_to_remove,list_name)
+        }
       }
     }
   }
@@ -157,7 +164,14 @@ order_results_by_contrast <- function(results, peak_matrix, clustering_vector)
       }
       else
       {
-        lists_to_remove <- c(lists_to_remove,list_name)
+        if(nrow(results$ionsFromZeros[[list_name]])==4 & ncol(results$ionsFromZeros[[list_name]])==1)
+        {
+          results$ionsFromZeros[[list_name]] <- repair_list(results$ionsFromZeros[[list_name]],list_name, contrast_data)
+        }
+        else
+        {
+          lists_to_remove <- c(lists_to_remove,list_name)
+        }
       }
     }
   }
@@ -292,6 +306,33 @@ merge_and_reorder_results <- function(results, peak_matrix, clustering_vector)
   new_results$data <- results$ionsData
   return(new_results)
 }
+
+
+
+repair_list <- function(list, list_name, contrast_data)
+{
+  indexes <- get_indexes_from_name(list_name)
+  list_data <- as.vector(list[[1]])
+  
+  new_list <- list()
+  new_list[[paste("Clus_",indexes[1],sep = "")]] <- list_data[1]
+  new_list[[paste("Clus_",indexes[2],sep="")]] <- list_data[2]
+  new_list$Ion <- as.numeric(list_data[3])
+  new_list$Index <- as.numeric(list_data[4])
+  new_list$Contrast <- contrast_data$cube[indexes[1], indexes[2], new_list$Index]
+  new_list <- as.data.frame(new_list)
+  
+  return(new_list)
+}
+
+
+
+
+
+
+
+
+
 
 
 
